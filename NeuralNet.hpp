@@ -6,6 +6,7 @@
 #include <iostream> 
 #include <vector>
 #include <string>
+#include <boost/range/combine.hpp>
   
 // # Dense layer
 // class Layer_Dense:
@@ -39,7 +40,6 @@ class LayerDense {
         Eigen::MatrixXd weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
         Eigen::VectorXd biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
 
-        Eigen::MatrixXd dvalues; // derivative values
         Eigen::MatrixXd dweights; // derivative wrt weights
         Eigen::VectorXd dbiases; // derivative wrt biases
         Eigen::MatrixXd dinputs; // derivative wrt inputs
@@ -47,8 +47,8 @@ class LayerDense {
 
         // constructor
         LayerDense(int n_inputs, int n_neurons) {
-            n_inputs = n_inputs;
-            n_neurons = n_neurons;
+            this->n_inputs = n_inputs;
+            this->n_neurons = n_neurons;
         } 
 
         // Member functions declaration
@@ -87,13 +87,8 @@ void LayerDense::backward(Eigen::VectorXd dvalues) {
 class ActivationRelu {
     public:
         Eigen::VectorXd inputs; // inputs
-        Eigen::VectorXd dvalues; // derivative values
         Eigen::VectorXd dinputs; // derivative wrt inputs
         Eigen::MatrixXd output;
-
-        // constructor
-        ActivationRelu() {
-        } 
 
         // Member functions declaration
         void forward(Eigen::VectorXd inputs);
@@ -101,16 +96,92 @@ class ActivationRelu {
 };
 
 // Member functions definitions
-void ActivationRelu::forward(Eigen::VectorXd inputs) {
-    this->inputs = inputs;
-    Eigen::VectorXd output = inputs;
+void ActivationRelu::forward(Eigen::VectorXd in) {
+    inputs = in;
+    output = (inputs.array() < 0).select(0, inputs);
 }
 
 void ActivationRelu::backward(Eigen::VectorXd dvalues) {
-    Eigen::VectorXd dweights = inputs.transpose() * dvalues;
-    Eigen::VectorXd dbiases = dvalues.colwise().sum();
-    Eigen::VectorXd dinputs = weights.transpose() * dvalues;
+    dinputs = (inputs.array() < 0).select(0, dvalues);
 }
 
+
+// # Softmax activation
+// class Activation_Softmax:
+//   # Forward pass
+//   def forward(self, inputs):
+//     # Remember input values
+//     self.inputs = inputs
+//     # Get unnormalized probabilities
+//     exp_values = np.exp(inputs - np.max(inputs, axis=1,keepdims=True))
+//     # Normalize them for each sample
+//     probabilities = exp_values / np.sum(exp_values, axis=1,keepdims=True)
+//     self.output = probabilities
+//   # Backward pass
+//   def backward(self, dvalues):
+//     # Create uninitialized array
+//     self.dinputs = np.empty_like(dvalues)
+//     # Enumerate outputs and gradients
+//     for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
+//       # Flatten output array
+//       single_output = single_output.reshape(-1, 1)
+//       # Calculate Jacobian matrix of the output
+//       jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
+//       # Calculate sample-wise gradient and add it to the array of sample gradients
+//       self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
+
+class ActivationSoftmax {
+    public:
+        Eigen::MatrixXd inputs; // inputs
+        Eigen::MatrixXd dinputs; // derivative wrt inputs
+        Eigen::MatrixXd output;
+
+        // Member functions declaration
+        void forward(Eigen::MatrixXd inputs);
+        void backward(Eigen::MatrixXd dvalues);
+};
+
+// Member functions definitions
+void ActivationSoftmax::forward(Eigen::MatrixXd in) {
+    inputs = in;
+    Eigen::MatrixXd exp_values;
+    Eigen::MatrixXd max_values;
+    Eigen::MatrixXd probabilities;
+
+    max_values.setZero();
+    max_values.diagonal() = inputs.rowwise().maxCoeff(); // max
+    exp_values = (inputs - max_values).array().exp(); // unnormalized probabilities
+    probabilities = exp_values.array().rowwise()  / (exp_values.array().colwise().sum()); // normalized probabilities
+    output = probabilities;
+}
+
+void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
+    Eigen::MatrixXd jacobian_matrix;
+    size_t i;
+    Eigen::MatrixXd single_output;
+    Eigen::MatrixXd single_dvalues;
+
+    //for (i, (single_output, single_dvalues) in enum boost::combine(output, dvalues); i++) {
+    for (i = 0; i <= dvalues.size(); i++)    {
+        single_output = output.row(i);
+        single_dvalues = dvalues.row(i);
+        jacobian_matrix.setZero();
+        jacobian_matrix.diagonal() = single_output - (single_output, single_output.transpose()).colwise().sum(); //Calculate Jacobian matrix of the output
+        inputs.row(i) = (jacobian_matrix, single_dvalues).colwise().sum(); // Calculate sample-wise gradient and add it to the array of sample gradients
+        }    
+}
+
+// # Common loss class
+// class Loss:
+//     # Calculates the data and regularization losses
+//     # given model output and ground truth values
+//     def calculate(self, output, y):
+//         # Calculate sample losses
+//         sample_losses = self.forward(output, y)
+//         # Calculate mean loss
+//         data_loss = np.mean(sample_losses)
+//         # Return loss
+//         return data_loss
+//         # Cross-entropy loss
 
 #endif // NEURALNET_HPP
