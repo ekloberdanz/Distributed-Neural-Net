@@ -1,3 +1,6 @@
+#include "NeuralNet.hpp"
+
+
 // LayerDense functions definitions
 void LayerDense::forward(Eigen::VectorXd inputs) {
     this->inputs = inputs;
@@ -74,3 +77,15 @@ Eigen::MatrixXd Loss::calculate(Eigen::MatrixXd output, Eigen::MatrixXd y) {
     return sample_losses;
 }
 
+
+// SGD functions declaration
+void SGD::pre_update_params() {
+}
+
+void SGD::update_params(LayerDense layer) {
+    layer.weights += learning_rate * layer.dweights;
+    layer.biases += learning_rate * layer.dbiases;
+}
+void SGD::post_update_params() {
+    iterations += 1;
+}
