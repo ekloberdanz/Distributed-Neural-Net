@@ -67,14 +67,14 @@ class Loss {
         void backward(Eigen::VectorXd dvalues, Eigen::VectorXd y_true);
 };
 
-class SGD {
+class StochasticGradientDescent {
     public:
         double learning_rate; // learning rate
         double decay; // decay
         int iterations = 0; // initialize number of iterations to 0
 
         // constructor
-        SGD(double learning_rate, double decay) {
+        StochasticGradientDescent(double learning_rate, double decay) {
             this->learning_rate = learning_rate;
             this->decay = decay;
         } 
