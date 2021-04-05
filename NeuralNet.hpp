@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 #include <boost/range/combine.hpp>
-  
+#include <fstream>
 
 class LayerDense {
     public:
@@ -15,8 +15,8 @@ class LayerDense {
         int n_neurons; // number of neurons
 
         Eigen::MatrixXd inputs; // inputs
-        Eigen::MatrixXd weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
-        Eigen::VectorXd biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
+        Eigen::MatrixXd weights;
+        Eigen::VectorXd biases;
         Eigen::MatrixXd output;
 
         Eigen::MatrixXd dweights; // derivative wrt weights
@@ -25,6 +25,8 @@ class LayerDense {
 
         // constructor
         LayerDense(int n_inputs, int n_neurons) {
+            this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
+            this->biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
             this->n_inputs = n_inputs;
             this->n_neurons = n_neurons;
         } 
