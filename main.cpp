@@ -8,7 +8,7 @@ int main() {
     // Number of classes
     int NUM_CLASSES = 3;
 
-    // Create objects
+    // Create for neural network objects
     LayerDense dense_layer_1(2, 64);
     ActivationRelu activation_relu();
     LayerDense dense_layer_2(64, NUM_CLASSES);

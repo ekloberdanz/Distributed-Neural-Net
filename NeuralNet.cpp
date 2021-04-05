@@ -2,24 +2,24 @@
 
 
 // LayerDense functions definitions
-void LayerDense::forward(Eigen::VectorXd inputs) {
+void LayerDense::forward(Eigen::MatrixXd inputs) {
     this->inputs = inputs;
     Eigen::MatrixXd output = inputs * weights + biases;
 }
 
-void LayerDense::backward(Eigen::VectorXd dvalues) {
-    Eigen::VectorXd dweights = inputs.transpose() * dvalues;
+void LayerDense::backward(Eigen::MatrixXd dvalues) {
+    Eigen::MatrixXd dweights = inputs.transpose() * dvalues;
     Eigen::VectorXd dbiases = dvalues.colwise().sum();
-    Eigen::VectorXd dinputs = weights.transpose() * dvalues;
+    Eigen::MatrixXd dinputs = weights.transpose() * dvalues;
 }
 
 // ActivationRelu functions definitions
-void ActivationRelu::forward(Eigen::VectorXd in) {
+void ActivationRelu::forward(Eigen::MatrixXd in) {
     inputs = in;
     output = (inputs.array() < 0).select(0, inputs);
 }
 
-void ActivationRelu::backward(Eigen::VectorXd dvalues) {
+void ActivationRelu::backward(Eigen::MatrixXd dvalues) {
     dinputs = (inputs.array() < 0).select(0, dvalues);
 }
 
@@ -62,9 +62,9 @@ Eigen::MatrixXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::MatrixXd y_true) {
     return negative_log_likelihoods;
 }
 
-void Loss::backward(Eigen::VectorXd dvalues, Eigen::VectorXd y_true) {
+void Loss::backward(Eigen::MatrixXd dvalues, Eigen::MatrixXd y_true) {
     int samples = dvalues.size();
-    Eigen::VectorXd ones;
+    Eigen::MatrixXd ones;
     ones.fill(-1);
     dinputs = y_true.array() * (ones.array()/dvalues.array());
     dinputs = dinputs/samples;

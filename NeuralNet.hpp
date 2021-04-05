@@ -14,14 +14,14 @@ class LayerDense {
         int n_inputs; // number of inputs
         int n_neurons; // number of neurons
 
-        Eigen::VectorXd inputs; // inputs
+        Eigen::MatrixXd inputs; // inputs
         Eigen::MatrixXd weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
         Eigen::VectorXd biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
+        Eigen::MatrixXd output;
 
         Eigen::MatrixXd dweights; // derivative wrt weights
         Eigen::VectorXd dbiases; // derivative wrt biases
         Eigen::MatrixXd dinputs; // derivative wrt inputs
-        Eigen::MatrixXd output;
 
         // constructor
         LayerDense(int n_inputs, int n_neurons) {
@@ -30,19 +30,19 @@ class LayerDense {
         } 
 
         // Member functions declaration
-        void forward(Eigen::VectorXd inputs);
-        void backward(Eigen::VectorXd dvalues);
+        void forward(Eigen::MatrixXd inputs);
+        void backward(Eigen::MatrixXd dvalues);
 };
 
 class ActivationRelu {
     public:
-        Eigen::VectorXd inputs; // inputs
-        Eigen::VectorXd dinputs; // derivative wrt inputs
+        Eigen::MatrixXd inputs; // inputs
+        Eigen::MatrixXd dinputs; // derivative wrt inputs
         Eigen::MatrixXd output;
 
         // Member functions declaration
-        void forward(Eigen::VectorXd inputs);
-        void backward(Eigen::VectorXd dvalues);
+        void forward(Eigen::MatrixXd inputs);
+        void backward(Eigen::MatrixXd dvalues);
 };
 
 
@@ -64,7 +64,7 @@ class Loss {
         // Member functions declaration
         Eigen::MatrixXd calculate(Eigen::MatrixXd output, Eigen::MatrixXd y);
         Eigen::MatrixXd forward(Eigen::MatrixXd y_pred, Eigen::MatrixXd y_true);
-        void backward(Eigen::VectorXd dvalues, Eigen::VectorXd y_true);
+        void backward(Eigen::MatrixXd dvalues, Eigen::MatrixXd y_true);
 };
 
 class StochasticGradientDescent {
