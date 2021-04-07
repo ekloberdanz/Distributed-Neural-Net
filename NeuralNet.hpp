@@ -87,4 +87,7 @@ class StochasticGradientDescent {
         void post_update_params();
 };
 
+Eigen::MatrixXd load_matrix_data(std::string fileToOpen);
+Eigen::VectorXd load_vector_data(std::string fileToOpen);
+
 #endif // NEURALNET_HPP
