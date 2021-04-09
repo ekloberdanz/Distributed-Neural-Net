@@ -17,11 +17,6 @@ int main() {
     Eigen::VectorXd y_train;
     Eigen::MatrixXd X_test;
     Eigen::VectorXd y_test;
-
-    // variables
-    double loss;
-    Eigen::VectorXd predictions;
-
  
     // load the training and testing data from the file
     X_train = load_matrix_data("./data/X_train.csv");
@@ -50,6 +45,11 @@ int main() {
     std::cout << "The matrix dense_layer_2.biases is of size " << dense_layer_2.biases.rows() << "x" << dense_layer_2.biases.cols() << std::endl;
     // std::cout << dense_layer_1.biases;
 
+
+    // variables
+    double loss;
+    double train_accuracy;
+
     // Train DNN
     int NUMBER_OF_EPOCHS = 10;
     for (int epoch : boost::irange(1,NUMBER_OF_EPOCHS+1)) {
@@ -65,16 +65,25 @@ int main() {
         std::cout << "The matrix activation_softmax.output is of size " << activation_softmax.output.rows() << "x" << activation_softmax.output.cols() << std::endl;
         // calculate loss
         loss = loss_categorical_crossentropy.calculate(activation_softmax.output, y_train);
-        // get predictions
-        Eigen::MatrixXf::Index max_index;
-        for (int i=0; i < activation_softmax.output.cols() - 1; i++) {
-            std::cout << activation_softmax.output.col(i).maxCoeff(&max_index)<< std::endl;
-            // predictions(i) = activation_softmax.output.col(i).maxCoeff(&max_index);
+        // get predictions and accuracy
+        Eigen::MatrixXd::Index maxRow, maxCol;
+        Eigen::VectorXd predictions(activation_softmax.output.cols());
+        Eigen::VectorXd pred_truth_comparison(activation_softmax.output.cols());
+        double pred;
+        int index_pred;
+        for (int i=0; i < activation_softmax.output.cols(); i++) {
+            std::cout << "i: " << i << std::endl;
+            pred = activation_softmax.output.col(i).maxCoeff(&maxRow, &maxCol);
+            std::cout << "pred: " << pred << std::endl;
+            index_pred = maxRow;
+            std::cout << "index_pred: " << index_pred << std::endl;
+            predictions(i) = index_pred;
+            pred_truth_comparison(i) = predictions(i) == y_train(i);
         }
-        // predictions = activation_softmax.output.colwise().maxCoeff(&max_index);
-        std::cout << predictions << std::endl;
-
-
+        std::cout << "The vector predictions is of size " << predictions.rows() << "x" << predictions.cols() << std::endl;
+        std::cout << "The vector pred_truth_comparison is of size " << pred_truth_comparison.rows() << "x" << pred_truth_comparison.cols() << std::endl;
+        train_accuracy = pred_truth_comparison.mean();
+        std::cout << "train_accuracy: " << train_accuracy << std::endl;
     }
 
     
