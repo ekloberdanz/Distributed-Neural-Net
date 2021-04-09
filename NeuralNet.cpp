@@ -54,18 +54,40 @@ void ActivationSoftmax::forward(Eigen::MatrixXd in) {
 
 void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
     Eigen::MatrixXd jacobian_matrix;
-    size_t i;
     Eigen::MatrixXd single_output;
-    Eigen::MatrixXd single_dvalues;
+    Eigen::VectorXd single_dvalues;
+    Eigen::MatrixXd dinputs(dvalues.rows(),dvalues.cols());
+    // Eigen::MatrixXd single_dinputs;
+    Eigen::MatrixXd single_output_one_hot_encoded;  
+    int labels = dvalues.cols();
 
     //for (i, (single_output, single_dvalues) in enum boost::combine(output, dvalues); i++) {
-    for (i = 0; i <= dvalues.size(); i++)    {
-        single_output = output.row(i);
+    for (int i = 0; i < dvalues.rows(); i++)    {
+        single_output = output.col(i);
+        // std::cout << "The vector single_output is of size " << single_output.rows() << "x" << single_output.cols() << std::endl;
         single_dvalues = dvalues.row(i);
-        jacobian_matrix.setZero();
-        jacobian_matrix.diagonal() = single_output - (single_output, single_output.transpose()).colwise().sum(); //Calculate Jacobian matrix of the output
-        inputs.row(i) = (jacobian_matrix, single_dvalues).colwise().sum(); // Calculate sample-wise gradient and add it to the array of sample gradients
+        // std::cout << "The vector single_dvalues is of size " << single_dvalues.rows() << "x" << single_dvalues.cols() << std::endl;
+        single_output_one_hot_encoded = Eigen::MatrixXd::Zero(labels, labels);
+        for (int r=0; r < labels; r++) {
+            // int index = single_output(r);
+            single_output_one_hot_encoded(r, r) = single_output(r);
+        }
+        std::cout << "The matrix single_output_one_hot_encoded is of size " << single_output_one_hot_encoded.rows() << "x" << single_output_one_hot_encoded.cols() << std::endl;
+        // std::cout << "single_output_one_hot_encoded " << single_output_one_hot_encoded;
+        jacobian_matrix = single_output_one_hot_encoded - (single_output * single_output.transpose());
+        std::cout << "The matrix jacobian_matrix is of size " << jacobian_matrix.rows() << "x" << jacobian_matrix.cols() << std::endl;
+        std::cout << "The vector single_dvalues is of size " << single_dvalues.rows() << "x" << single_dvalues.cols() << std::endl;
+        std::cout << "The vector dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+        Eigen::VectorXd gradient = jacobian_matrix * single_dvalues;
+        std::cout << "The vector gradient is of size " << gradient.rows() << "x" << gradient.cols() << std::endl;
+        for (int col=0; col < dinputs.cols(); col++) {
+            dinputs(i, col) = gradient(col);
+        }
+        // jacobian_matrix.setZero();
+        // jacobian_matrix.diagonal() = single_output - (single_output, single_output.transpose()).colwise().sum(); //Calculate Jacobian matrix of the output
+        // inputs.row(i) = (jacobian_matrix, single_dvalues).colwise().sum(); // Calculate sample-wise gradient and add it to the array of sample gradients
         }    
+    this->dinputs = dinputs;
 }
 
 // Loss functions definitions
@@ -101,8 +123,9 @@ void Loss::backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true) {
     y_true_one_hot_encoded = Eigen::MatrixXd::Zero(samples, labels);
     for (int r=0; r < samples; r++) {
         index = y_true(r);
-        y_true_one_hot_encoded(r) = 1;
+        y_true_one_hot_encoded(r, index) = 1;
     }
+    // std::cout << "y_true_one_hot_encoded " << y_true_one_hot_encoded;
     std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
     // Calculate gradient
     dinputs = - y_true_one_hot_encoded.array() / dvalues.array();
