@@ -35,9 +35,13 @@ int main() {
 
     // matrix to be loaded from a file
     Eigen::MatrixXd X_train;
-    Eigen::MatrixXd y_train;
+    Eigen::VectorXd y_train;
     Eigen::MatrixXd X_test;
-    Eigen::MatrixXd y_test;
+    Eigen::VectorXd y_test;
+
+    // variables
+    double loss;
+     Eigen::VectorXd predictions;
  
     // load the training and testing data from the file
     X_train = load_matrix_data("./data/X_train.csv");
@@ -46,18 +50,25 @@ int main() {
     y_test = load_vector_data("./data/y_test.csv");
      
     // print the matrix in console
-    std::cout << y_test;
+    // std::cout << X_train;
+    std::cout << "The matrix X_train is of size " << X_train.rows() << "x" << X_train.cols() << std::endl;
 
     // Number of classes
     int NUM_CLASSES = 3;
 
     // Create for neural network objects
     LayerDense dense_layer_1(2, 64);
-    ActivationRelu activation_relu();
+    ActivationRelu activation_relu;
     LayerDense dense_layer_2(64, NUM_CLASSES);
-    ActivationSoftmax activation_softmax();
-    Loss loss_categorical_crossentropy();
+    ActivationSoftmax activation_softmax;
+    Loss loss_categorical_crossentropy;
     StochasticGradientDescent optimizer_SGD(0.01, 5e-5);
+
+    std::cout << "The matrix dense_layer_1.weights is of size " << dense_layer_1.weights.rows() << "x" << dense_layer_1.weights.cols() << std::endl;
+    std::cout << "The matrix dense_layer_1.biases is of size " << dense_layer_1.biases.rows() << "x" << dense_layer_1.biases.cols() << std::endl;
+    std::cout << "The matrix dense_layer_2.weights is of size " << dense_layer_2.weights.rows() << "x" << dense_layer_2.weights.cols() << std::endl;
+    std::cout << "The matrix dense_layer_2.biases is of size " << dense_layer_2.biases.rows() << "x" << dense_layer_2.biases.cols() << std::endl;
+    // std::cout << dense_layer_1.biases;
 
     // Train DNN
     int NUMBER_OF_EPOCHS = 10;
@@ -65,9 +76,19 @@ int main() {
         std::cout << epoch << "\n";
         // forward pass
         dense_layer_1.forward(X_train);
-        activation_relu.forward(dense_layer_1.output)
-        dense_layer_2.forward(activation_relu.output)
-        activation_softmax.forward(dense_layer_2.output)
+        std::cout << "The matrix dense_layer_1.output is of size " << dense_layer_1.output.rows() << "x" << dense_layer_1.output.cols() << std::endl;
+        activation_relu.forward(dense_layer_1.output);
+        std::cout << "The matrix activation_relu.output is of size " << activation_relu.output.rows() << "x" << activation_relu.output.cols() << std::endl;
+        dense_layer_2.forward(activation_relu.output);
+        std::cout << "The matrix dense_layer_2.output is of size " << dense_layer_2.output.rows() << "x" << dense_layer_2.output.cols() << std::endl;
+        activation_softmax.forward(dense_layer_2.output);
+        std::cout << "The matrix activation_softmax.output is of size " << activation_softmax.output.rows() << "x" << activation_softmax.output.cols() << std::endl;
+        // calculate loss
+        loss = loss_categorical_crossentropy.calculate(activation_softmax.output, y_train);
+        // get predictions
+
+
+
     }
 
     

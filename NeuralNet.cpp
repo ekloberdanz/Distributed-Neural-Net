@@ -1,11 +1,16 @@
 #include "NeuralNet.hpp"
 #include<fstream>
 #include<iostream>
+#include <eigen3/Eigen/Dense>
 
 // LayerDense functions definitions
 void LayerDense::forward(Eigen::MatrixXd inputs) {
     this->inputs = inputs;
-    Eigen::MatrixXd output = inputs * weights + biases;
+    Eigen::MatrixXd output = (inputs * weights).rowwise() + biases.transpose();
+    std::cout <<  typeid(output).name() << std::endl;
+    // std::cout << "The matrix output is of size " << output.rows() << "x" << output.cols() << std::endl;
+    this->output = output;
+    // Eigen::MatrixXd output = inputs * weights;
 }
 
 void LayerDense::backward(Eigen::MatrixXd dvalues) {
@@ -18,6 +23,7 @@ void LayerDense::backward(Eigen::MatrixXd dvalues) {
 void ActivationRelu::forward(Eigen::MatrixXd in) {
     inputs = in;
     output = (inputs.array() < 0).select(0, inputs);
+    this->output = output;
 }
 
 void ActivationRelu::backward(Eigen::MatrixXd dvalues) {
@@ -27,15 +33,22 @@ void ActivationRelu::backward(Eigen::MatrixXd dvalues) {
 // ActivationSoftmax functions definitions
 void ActivationSoftmax::forward(Eigen::MatrixXd in) {
     inputs = in;
+    std::cout << "The matrix inputs is of size " << inputs.rows() << "x" << inputs.cols() << std::endl;
+   
     Eigen::MatrixXd exp_values;
-    Eigen::MatrixXd max_values;
+    Eigen::VectorXd max_values;
     Eigen::MatrixXd probabilities;
 
-    max_values.setZero();
-    max_values.diagonal() = inputs.rowwise().maxCoeff(); // max
-    exp_values = (inputs - max_values).array().exp(); // unnormalized probabilities
-    probabilities = exp_values.array().rowwise()  / (exp_values.array().colwise().sum()); // normalized probabilities
+    // max_values.setZero();
+    max_values = inputs.rowwise().maxCoeff(); // max
+    // std::cout << max_values;
+    std::cout << "The vector max_values is of size " << max_values.rows() << "x" << max_values.cols() << std::endl;
+    exp_values = inputs.colwise() - max_values; // unnormalized probabilities
+    std::cout << "The matrix exp_values is of size " << exp_values.rows() << "x" << exp_values.cols() << std::endl;
+    std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
+    probabilities = exp_values.transpose() * (exp_values.rowwise().sum().asDiagonal().inverse()); // normalized probabilities
     output = probabilities;
+    this->output = output;
 }
 
 void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
@@ -55,15 +68,31 @@ void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
 }
 
 // Loss functions definitions
-Eigen::MatrixXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::MatrixXd y_true) {
-    int samples = y_pred.size();
-    //if y_true.rows() 
-    Eigen::MatrixXd correct_confidences = (y_pred, y_true).colwise().sum();
-    Eigen::MatrixXd negative_log_likelihoods = correct_confidences.array().log();
+Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
+    int samples = y_true.rows();
+    
+    std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
+    std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
+    // Eigen::VectorXd correct_confidences = y_pred(Eigen::all(0, samples-1), y_true);
+    int r;
+    int index;
+    double conf;
+    Eigen::VectorXd correct_confidences(samples);
+    for (r=0; r < samples-1; r++) {
+        std::cout << "r: " << r << std::endl;
+        index = y_true(r);
+        std::cout << "index: " << index << std::endl;
+        conf = y_pred(index, r);
+        std::cout << "confidence: " << conf << std::endl;
+        correct_confidences(r) = conf;
+    }
+    std::cout << "samples: " << samples << std::endl;
+    std::cout << "The vector correct_confidences is of size " << correct_confidences.rows() << "x" << correct_confidences.cols() << std::endl;
+    Eigen::VectorXd negative_log_likelihoods = correct_confidences.array().log();
     return negative_log_likelihoods;
 }
 
-void Loss::backward(Eigen::MatrixXd dvalues, Eigen::MatrixXd y_true) {
+void Loss::backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true) {
     int samples = dvalues.size();
     Eigen::MatrixXd ones;
     ones.fill(-1);
@@ -72,10 +101,10 @@ void Loss::backward(Eigen::MatrixXd dvalues, Eigen::MatrixXd y_true) {
 
 }
 
-Eigen::MatrixXd Loss::calculate(Eigen::MatrixXd output, Eigen::MatrixXd y) {
-    Eigen::MatrixXd sample_losses = Loss::forward(output, y);
-    Eigen::MatrixXd data_loss = sample_losses.rowwise().mean();
-    return sample_losses;
+double Loss::calculate(Eigen::MatrixXd output, Eigen::VectorXd y) {
+    Eigen::VectorXd sample_losses = Loss::forward(output, y);
+    double data_loss = sample_losses.mean();
+    return data_loss;
 }
 
 

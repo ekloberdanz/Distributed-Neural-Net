@@ -27,6 +27,7 @@ class LayerDense {
         LayerDense(int n_inputs, int n_neurons) {
             this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
             this->biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
+            // biases.resize(1,n_neurons);
             this->n_inputs = n_inputs;
             this->n_neurons = n_neurons;
         } 
@@ -64,9 +65,9 @@ class Loss {
         Eigen::MatrixXd dinputs;
 
         // Member functions declaration
-        Eigen::MatrixXd calculate(Eigen::MatrixXd output, Eigen::MatrixXd y);
-        Eigen::MatrixXd forward(Eigen::MatrixXd y_pred, Eigen::MatrixXd y_true);
-        void backward(Eigen::MatrixXd dvalues, Eigen::MatrixXd y_true);
+        Eigen::VectorXd forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true);
+        double calculate(Eigen::MatrixXd output, Eigen::VectorXd y);
+        void backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true);
 };
 
 class StochasticGradientDescent {
