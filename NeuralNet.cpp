@@ -79,11 +79,11 @@ Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
     double conf;
     Eigen::VectorXd correct_confidences(samples);
     for (r=0; r < samples-1; r++) {
-        std::cout << "r: " << r << std::endl;
+        // std::cout << "r: " << r << std::endl;
         index = y_true(r);
-        std::cout << "index: " << index << std::endl;
+        // std::cout << "index: " << index << std::endl;
         conf = y_pred(index, r);
-        std::cout << "confidence: " << conf << std::endl;
+        // std::cout << "confidence: " << conf << std::endl;
         correct_confidences(r) = conf;
     }
     std::cout << "samples: " << samples << std::endl;

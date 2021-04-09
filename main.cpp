@@ -13,27 +13,6 @@ int main() {
     std::cout << "Hello World" << std::endl;
     
     // Load dataset
-    // std::string MNIST_DATA_LOCATION = "dataset";
-    // std::cout << "MNIST data directory: " << MNIST_DATA_LOCATION << std::endl;
-
-    // mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> dataset =
-    //     mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>(MNIST_DATA_LOCATION);
-
-    // // normalized_dataset = normalize_dataset(dataset);
-
-    // // std::vector<unsigned char X_train = dataset.training_images.data();
-    // // Eigen::MatrixXf test = Eigen::Map<Eigen::Matrix<float, 3, 1> >(test_vector.data());    
-
-    // // Eigen:VectorXd X_train(dataset.training_images.data());
-
-    // std::cout << "Nbr of training images = " << dataset.training_images.size() << std::endl;
-    // std::cout << "Nbr of training labels = " << dataset.training_labels.size() << std::endl;
-    // std::cout << "Nbr of test images = " << dataset.test_images.size() << std::endl;
-    // std::cout << "Nbr of test labels = " << dataset.test_labels.size() << std::endl;
-
-    // std::cout <<  typeid(dataset.training_images).name() << std::endl;
-
-    // matrix to be loaded from a file
     Eigen::MatrixXd X_train;
     Eigen::VectorXd y_train;
     Eigen::MatrixXd X_test;
@@ -41,7 +20,8 @@ int main() {
 
     // variables
     double loss;
-     Eigen::VectorXd predictions;
+    Eigen::VectorXd predictions;
+
  
     // load the training and testing data from the file
     X_train = load_matrix_data("./data/X_train.csv");
@@ -86,7 +66,13 @@ int main() {
         // calculate loss
         loss = loss_categorical_crossentropy.calculate(activation_softmax.output, y_train);
         // get predictions
-
+        Eigen::MatrixXf::Index max_index;
+        for (int i=0; i < activation_softmax.output.cols() - 1; i++) {
+            std::cout << activation_softmax.output.col(i).maxCoeff(&max_index)<< std::endl;
+            // predictions(i) = activation_softmax.output.col(i).maxCoeff(&max_index);
+        }
+        // predictions = activation_softmax.output.colwise().maxCoeff(&max_index);
+        std::cout << predictions << std::endl;
 
 
     }
