@@ -2,10 +2,6 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-// #include "mnist/mnist_reader.hpp"
-// #include "mnist/mnist_utils.hpp"
-// #include "mnist/mnist_reader_common.hpp"
-// #include "mnist/mnist_reader_less.hpp"
 #include <boost/range/irange.hpp>
 #include <typeinfo>
 
@@ -27,6 +23,7 @@ int main() {
     // print the matrix in console
     // std::cout << X_train;
     std::cout << "The matrix X_train is of size " << X_train.rows() << "x" << X_train.cols() << std::endl;
+    std::cout << "The vector y_train is of size " << y_train.rows() << "x" << y_train.cols() << std::endl;
 
     // Number of classes
     int NUM_CLASSES = 3;
@@ -45,7 +42,6 @@ int main() {
     std::cout << "The matrix dense_layer_2.biases is of size " << dense_layer_2.biases.rows() << "x" << dense_layer_2.biases.cols() << std::endl;
     // std::cout << dense_layer_1.biases;
 
-
     // variables
     double loss;
     double train_accuracy;
@@ -54,7 +50,8 @@ int main() {
     int NUMBER_OF_EPOCHS = 10;
     for (int epoch : boost::irange(1,NUMBER_OF_EPOCHS+1)) {
         std::cout << epoch << "\n";
-        // forward pass
+
+        ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
         dense_layer_1.forward(X_train);
         std::cout << "The matrix dense_layer_1.output is of size " << dense_layer_1.output.rows() << "x" << dense_layer_1.output.cols() << std::endl;
         activation_relu.forward(dense_layer_1.output);
@@ -72,11 +69,11 @@ int main() {
         double pred;
         int index_pred;
         for (int i=0; i < activation_softmax.output.cols(); i++) {
-            std::cout << "i: " << i << std::endl;
+            // std::cout << "i: " << i << std::endl;
             pred = activation_softmax.output.col(i).maxCoeff(&maxRow, &maxCol);
-            std::cout << "pred: " << pred << std::endl;
+            // std::cout << "pred: " << pred << std::endl;
             index_pred = maxRow;
-            std::cout << "index_pred: " << index_pred << std::endl;
+            // std::cout << "index_pred: " << index_pred << std::endl;
             predictions(i) = index_pred;
             pred_truth_comparison(i) = predictions(i) == y_train(i);
         }
@@ -84,6 +81,14 @@ int main() {
         std::cout << "The vector pred_truth_comparison is of size " << pred_truth_comparison.rows() << "x" << pred_truth_comparison.cols() << std::endl;
         train_accuracy = pred_truth_comparison.mean();
         std::cout << "train_accuracy: " << train_accuracy << std::endl;
+
+        ////////////////////////////////////////////////////////////backward pass/////////////////////////////////////////////////////////////////////////
+        loss_categorical_crossentropy.backward(activation_softmax.output.transpose(), y_train);
+        std::cout << "The matrix loss_categorical_crossentropy.dinputs is of size " << loss_categorical_crossentropy.dinputs.rows() << "x" << loss_categorical_crossentropy.dinputs.cols() << std::endl;
+        // activation_softmax.backward(loss_categorical_crossentropy.dinputs);
+        // dense_layer_2.backward(activation_softmax.dinputs);
+        // activation_relu.backward(dense_layer_2.dinputs);
+        // dense_layer_1.backward(activation_relu.dinputs);
     }
 
     

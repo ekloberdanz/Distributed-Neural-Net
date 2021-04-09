@@ -47,6 +47,7 @@ void ActivationSoftmax::forward(Eigen::MatrixXd in) {
     std::cout << "The matrix exp_values is of size " << exp_values.rows() << "x" << exp_values.cols() << std::endl;
     std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
     probabilities = exp_values.transpose() * (exp_values.rowwise().sum().asDiagonal().inverse()); // normalized probabilities
+    // probabilities = exp_values.array() / exp_values.rowwise().sum().array(); // normalized probabilities
     output = probabilities;
     this->output = output;
 }
@@ -93,12 +94,23 @@ Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
 }
 
 void Loss::backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true) {
-    int samples = dvalues.size();
-    Eigen::MatrixXd ones;
-    ones.fill(-1);
-    dinputs = y_true.array() * (ones.array()/dvalues.array());
-    dinputs = dinputs/samples;
-
+    int samples = dvalues.rows();
+    int labels = dvalues.cols();
+    int index;
+    Eigen::MatrixXd y_true_one_hot_encoded;
+    y_true_one_hot_encoded = Eigen::MatrixXd::Zero(samples, labels);
+    for (int r=0; r < samples; r++) {
+        index = y_true(r);
+        y_true_one_hot_encoded(r) = 1;
+    }
+    std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
+    // Calculate gradient
+    dinputs = - y_true_one_hot_encoded.array() / dvalues.array();
+    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    // Normalize gradient
+    dinputs = dinputs/double(samples);
+    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    this->dinputs = dinputs;
 }
 
 double Loss::calculate(Eigen::MatrixXd output, Eigen::VectorXd y) {
