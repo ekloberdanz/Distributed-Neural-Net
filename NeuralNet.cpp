@@ -7,7 +7,7 @@
 void LayerDense::forward(Eigen::MatrixXd inputs) {
     this->inputs = inputs;
     Eigen::MatrixXd output = (inputs * weights).rowwise() + biases.transpose();
-    std::cout <<  typeid(output).name() << std::endl;
+    // std::cout <<  typeid(output).name() << std::endl;
     // std::cout << "The matrix output is of size " << output.rows() << "x" << output.cols() << std::endl;
     this->output = output;
     // Eigen::MatrixXd output = inputs * weights;
@@ -15,11 +15,11 @@ void LayerDense::forward(Eigen::MatrixXd inputs) {
 
 void LayerDense::backward(Eigen::MatrixXd dvalues) {
     Eigen::MatrixXd dweights = inputs.transpose() * dvalues;
-    std::cout << "The matrix dweights is of size " << dweights.rows() << "x" << dweights.cols() << std::endl;
+    // std::cout << "The matrix dweights is of size " << dweights.rows() << "x" << dweights.cols() << std::endl;
     Eigen::VectorXd dbiases = dvalues.colwise().sum();
-    std::cout << "The matrix dbiases is of size " << dbiases.rows() << "x" << dbiases.cols() << std::endl;
+    // std::cout << "The matrix dbiases is of size " << dbiases.rows() << "x" << dbiases.cols() << std::endl;
     Eigen::MatrixXd dinputs = weights * dvalues.transpose();
-    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     this->dinputs = dinputs;
     this->dweights = dweights;
     this->dbiases = dbiases;
@@ -34,14 +34,14 @@ void ActivationRelu::forward(Eigen::MatrixXd in) {
 
 void ActivationRelu::backward(Eigen::MatrixXd dvalues) {
     dinputs = (dvalues.array() <= 0).select(0, dvalues);
-    std::cout << "The matrix in dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    // std::cout << "The matrix in dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     this->dinputs = dinputs;
 }
 
 // ActivationSoftmax functions definitions
 void ActivationSoftmax::forward(Eigen::MatrixXd in) {
     inputs = in;
-    std::cout << "The matrix inputs is of size " << inputs.rows() << "x" << inputs.cols() << std::endl;
+    // std::cout << "The matrix inputs is of size " << inputs.rows() << "x" << inputs.cols() << std::endl;
    
     Eigen::MatrixXd exp_values;
     Eigen::VectorXd max_values;
@@ -50,12 +50,11 @@ void ActivationSoftmax::forward(Eigen::MatrixXd in) {
     // max_values.setZero();
     max_values = inputs.rowwise().maxCoeff(); // max
     // std::cout << max_values;
-    std::cout << "The vector max_values is of size " << max_values.rows() << "x" << max_values.cols() << std::endl;
+    // std::cout << "The vector max_values is of size " << max_values.rows() << "x" << max_values.cols() << std::endl;
     exp_values = inputs.colwise() - max_values; // unnormalized probabilities
-    std::cout << "The matrix exp_values is of size " << exp_values.rows() << "x" << exp_values.cols() << std::endl;
-    std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
+    // std::cout << "The matrix exp_values is of size " << exp_values.rows() << "x" << exp_values.cols() << std::endl;
+    // std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
     probabilities = exp_values.transpose() * (exp_values.rowwise().sum().asDiagonal().inverse()); // normalized probabilities
-    // probabilities = exp_values.array() / exp_values.rowwise().sum().array(); // normalized probabilities
     output = probabilities;
     this->output = output;
 }
@@ -65,7 +64,6 @@ void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
     Eigen::MatrixXd single_output;
     Eigen::VectorXd single_dvalues;
     Eigen::MatrixXd dinputs(dvalues.rows(),dvalues.cols());
-    // Eigen::MatrixXd single_dinputs;
     Eigen::MatrixXd single_output_one_hot_encoded;  
     int labels = dvalues.cols();
 
@@ -77,23 +75,19 @@ void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
         // std::cout << "The vector single_dvalues is of size " << single_dvalues.rows() << "x" << single_dvalues.cols() << std::endl;
         single_output_one_hot_encoded = Eigen::MatrixXd::Zero(labels, labels);
         for (int r=0; r < labels; r++) {
-            // int index = single_output(r);
             single_output_one_hot_encoded(r, r) = single_output(r);
         }
-        std::cout << "The matrix single_output_one_hot_encoded is of size " << single_output_one_hot_encoded.rows() << "x" << single_output_one_hot_encoded.cols() << std::endl;
+        // std::cout << "The matrix single_output_one_hot_encoded is of size " << single_output_one_hot_encoded.rows() << "x" << single_output_one_hot_encoded.cols() << std::endl;
         // std::cout << "single_output_one_hot_encoded " << single_output_one_hot_encoded;
         jacobian_matrix = single_output_one_hot_encoded - (single_output * single_output.transpose());
-        std::cout << "The matrix jacobian_matrix is of size " << jacobian_matrix.rows() << "x" << jacobian_matrix.cols() << std::endl;
-        std::cout << "The vector single_dvalues is of size " << single_dvalues.rows() << "x" << single_dvalues.cols() << std::endl;
-        std::cout << "The vector dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+        // std::cout << "The matrix jacobian_matrix is of size " << jacobian_matrix.rows() << "x" << jacobian_matrix.cols() << std::endl;
+        // std::cout << "The vector single_dvalues is of size " << single_dvalues.rows() << "x" << single_dvalues.cols() << std::endl;
+        // std::cout << "The vector dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
         Eigen::VectorXd gradient = jacobian_matrix * single_dvalues;
-        std::cout << "The vector gradient is of size " << gradient.rows() << "x" << gradient.cols() << std::endl;
+        // std::cout << "The vector gradient is of size " << gradient.rows() << "x" << gradient.cols() << std::endl;
         for (int col=0; col < dinputs.cols(); col++) {
             dinputs(i, col) = gradient(col);
-        }
-        // jacobian_matrix.setZero();
-        // jacobian_matrix.diagonal() = single_output - (single_output, single_output.transpose()).colwise().sum(); //Calculate Jacobian matrix of the output
-        // inputs.row(i) = (jacobian_matrix, single_dvalues).colwise().sum(); // Calculate sample-wise gradient and add it to the array of sample gradients
+            }
         }    
     this->dinputs = dinputs;
 }
@@ -102,9 +96,8 @@ void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
 Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
     int samples = y_true.rows();
     
-    std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
-    std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
-    // Eigen::VectorXd correct_confidences = y_pred(Eigen::all(0, samples-1), y_true);
+    // std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
+    // std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
     int r;
     int index;
     double conf;
@@ -117,8 +110,8 @@ Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
         // std::cout << "confidence: " << conf << std::endl;
         correct_confidences(r) = conf;
     }
-    std::cout << "samples: " << samples << std::endl;
-    std::cout << "The vector correct_confidences is of size " << correct_confidences.rows() << "x" << correct_confidences.cols() << std::endl;
+    // std::cout << "samples: " << samples << std::endl;
+    // std::cout << "The vector correct_confidences is of size " << correct_confidences.rows() << "x" << correct_confidences.cols() << std::endl;
     Eigen::VectorXd negative_log_likelihoods = correct_confidences.array().log();
     return negative_log_likelihoods;
 }
@@ -134,13 +127,13 @@ void Loss::backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true) {
         y_true_one_hot_encoded(r, index) = 1;
     }
     // std::cout << "y_true_one_hot_encoded " << y_true_one_hot_encoded;
-    std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
+    // std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
     // Calculate gradient
     dinputs = - y_true_one_hot_encoded.array() / dvalues.array();
-    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     // Normalize gradient
     dinputs = dinputs/double(samples);
-    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     this->dinputs = dinputs;
 }
 
@@ -153,22 +146,26 @@ double Loss::calculate(Eigen::MatrixXd output, Eigen::VectorXd y) {
 
 // SGD functions declaration
 void StochasticGradientDescent::pre_update_params() {
+    learning_rate = learning_rate * (1 / (1 + decay * iterations));
+    this->learning_rate = learning_rate;
+    std::cout << "learning_rate:  " << learning_rate << std::endl;
 }
 
 void StochasticGradientDescent::update_params(LayerDense layer) {
-    std::cout << "The matrix optimizer layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
-    std::cout << "The matrix optimizer layer.dweights is of size " << layer.dweights.rows() << "x" << layer.dweights.cols() << std::endl;
-    std::cout << "The matrix optimizer layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
-    std::cout << "The matrix optimizer layer.dbiases is of size " << layer.dbiases.rows() << "x" << layer.dbiases.cols() << std::endl;
+    // std::cout << "The matrix optimizer layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
+    // std::cout << "The matrix optimizer layer.dweights is of size " << layer.dweights.rows() << "x" << layer.dweights.cols() << std::endl;
+    // std::cout << "The matrix optimizer layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
+    // std::cout << "The matrix optimizer layer.dbiases is of size " << layer.dbiases.rows() << "x" << layer.dbiases.cols() << std::endl;
     
-    layer.weights += layer.dweights * learning_rate;
-    std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
-    layer.biases += learning_rate * layer.dbiases;
-    std::cout << "The matrix layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
+    layer.weights += (-layer.dweights * learning_rate);
+    // std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
+    layer.biases += (-learning_rate * layer.dbiases);
+    // std::cout << "The matrix layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
 }
 
 void StochasticGradientDescent::post_update_params() {
     iterations += 1;
+    this->iterations = iterations;
 }
 
 Eigen::MatrixXd load_matrix_data(std::string fileToOpen) {

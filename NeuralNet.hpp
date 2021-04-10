@@ -27,7 +27,6 @@ class LayerDense {
         LayerDense(int n_inputs, int n_neurons) {
             this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
             this->biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
-            // biases.resize(1,n_neurons);
             this->n_inputs = n_inputs;
             this->n_neurons = n_neurons;
         } 
@@ -74,12 +73,14 @@ class StochasticGradientDescent {
     public:
         double learning_rate; // learning rate
         double decay; // decay
+        double momentum; // momentum
         int iterations = 0; // initialize number of iterations to 0
 
         // constructor
-        StochasticGradientDescent(double learning_rate, double decay) {
+        StochasticGradientDescent(double learning_rate, double decay, double momentum) {
             this->learning_rate = learning_rate;
             this->decay = decay;
+            this->momentum = momentum;
             this->iterations = iterations;
         } 
 
