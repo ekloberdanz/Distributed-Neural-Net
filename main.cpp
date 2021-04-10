@@ -87,9 +87,12 @@ int main() {
         std::cout << "The matrix loss_categorical_crossentropy.dinputs is of size " << loss_categorical_crossentropy.dinputs.rows() << "x" << loss_categorical_crossentropy.dinputs.cols() << std::endl;
         activation_softmax.backward(loss_categorical_crossentropy.dinputs);
         std::cout << "The matrix activation_softmax.dinputs is of size " << activation_softmax.dinputs.rows() << "x" << activation_softmax.dinputs.cols() << std::endl;
-        // dense_layer_2.backward(activation_softmax.dinputs);
-        // activation_relu.backward(dense_layer_2.dinputs);
-        // dense_layer_1.backward(activation_relu.dinputs);
+        dense_layer_2.backward(activation_softmax.dinputs);
+        std::cout << "The matrix dense_layer_2.dinputs is of size " << dense_layer_2.dinputs.rows() << "x" << dense_layer_2.dinputs.cols() << std::endl;
+        activation_relu.backward(dense_layer_2.dinputs);
+        std::cout << "The matrix activation_relu.dinputs is of size " << activation_relu.dinputs.transpose().rows() << "x" << activation_relu.dinputs.transpose().cols() << std::endl;
+        dense_layer_1.backward(activation_relu.dinputs.transpose());
+        std::cout << "The matrix dense_layer_1.dinputs is of size " << dense_layer_1.dinputs.rows() << "x" << dense_layer_1.dinputs.cols() << std::endl;
     }
 
     

@@ -15,8 +15,12 @@ void LayerDense::forward(Eigen::MatrixXd inputs) {
 
 void LayerDense::backward(Eigen::MatrixXd dvalues) {
     Eigen::MatrixXd dweights = inputs.transpose() * dvalues;
+    std::cout << "The matrix dweights is of size " << dweights.rows() << "x" << dweights.cols() << std::endl;
     Eigen::VectorXd dbiases = dvalues.colwise().sum();
-    Eigen::MatrixXd dinputs = weights.transpose() * dvalues;
+    std::cout << "The matrix dbiases is of size " << dbiases.rows() << "x" << dbiases.cols() << std::endl;
+    Eigen::MatrixXd dinputs = weights * dvalues.transpose();
+    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    this->dinputs = dinputs;
 }
 
 // ActivationRelu functions definitions
@@ -27,7 +31,9 @@ void ActivationRelu::forward(Eigen::MatrixXd in) {
 }
 
 void ActivationRelu::backward(Eigen::MatrixXd dvalues) {
-    dinputs = (inputs.array() < 0).select(0, dvalues);
+    dinputs = (dvalues.array() <= 0).select(0, dvalues);
+    std::cout << "The matrix in dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    this->dinputs = dinputs;
 }
 
 // ActivationSoftmax functions definitions
