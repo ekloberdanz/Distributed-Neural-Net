@@ -21,6 +21,8 @@ void LayerDense::backward(Eigen::MatrixXd dvalues) {
     Eigen::MatrixXd dinputs = weights * dvalues.transpose();
     std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     this->dinputs = dinputs;
+    this->dweights = dweights;
+    this->dbiases = dbiases;
 }
 
 // ActivationRelu functions definitions
@@ -154,9 +156,17 @@ void StochasticGradientDescent::pre_update_params() {
 }
 
 void StochasticGradientDescent::update_params(LayerDense layer) {
-    layer.weights += learning_rate * layer.dweights;
+    std::cout << "The matrix optimizer layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
+    std::cout << "The matrix optimizer layer.dweights is of size " << layer.dweights.rows() << "x" << layer.dweights.cols() << std::endl;
+    std::cout << "The matrix optimizer layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
+    std::cout << "The matrix optimizer layer.dbiases is of size " << layer.dbiases.rows() << "x" << layer.dbiases.cols() << std::endl;
+    
+    layer.weights += layer.dweights * learning_rate;
+    std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
     layer.biases += learning_rate * layer.dbiases;
+    std::cout << "The matrix layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
 }
+
 void StochasticGradientDescent::post_update_params() {
     iterations += 1;
 }

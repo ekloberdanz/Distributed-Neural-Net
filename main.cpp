@@ -93,7 +93,16 @@ int main() {
         std::cout << "The matrix activation_relu.dinputs is of size " << activation_relu.dinputs.transpose().rows() << "x" << activation_relu.dinputs.transpose().cols() << std::endl;
         dense_layer_1.backward(activation_relu.dinputs.transpose());
         std::cout << "The matrix dense_layer_1.dinputs is of size " << dense_layer_1.dinputs.rows() << "x" << dense_layer_1.dinputs.cols() << std::endl;
+
+
+        ////////////////////////////////////////////////////////////optimizer - update weights and biases/////////////////////////////////////////////////////////////////////////
+        optimizer_SGD.pre_update_params();
+        optimizer_SGD.update_params(dense_layer_1);
+        optimizer_SGD.update_params(dense_layer_2);
+        optimizer_SGD.post_update_params();
     }
+
+     // Test DNN
 
     
 }

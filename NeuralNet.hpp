@@ -80,6 +80,7 @@ class StochasticGradientDescent {
         StochasticGradientDescent(double learning_rate, double decay) {
             this->learning_rate = learning_rate;
             this->decay = decay;
+            this->iterations = iterations;
         } 
 
         // Member functions declaration
