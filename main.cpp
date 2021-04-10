@@ -48,7 +48,7 @@ int main() {
     double test_accuracy;
 
     // Train DNN
-    int NUMBER_OF_EPOCHS = 10;
+    int NUMBER_OF_EPOCHS = 1000;
     for (int epoch : boost::irange(1,NUMBER_OF_EPOCHS+1)) {
         std::cout << epoch << "\n";
 
