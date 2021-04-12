@@ -51,7 +51,7 @@ void ActivationSoftmax::forward(Eigen::MatrixXd in) {
     max_values = inputs.rowwise().maxCoeff(); // max
     // std::cout << max_values;
     // std::cout << "The vector max_values is of size " << max_values.rows() << "x" << max_values.cols() << std::endl;
-    exp_values = inputs.colwise() - max_values; // unnormalized probabilities
+    exp_values = (inputs.colwise() - max_values).array().exp(); // unnormalized probabilities
     // std::cout << "The matrix exp_values is of size " << exp_values.rows() << "x" << exp_values.cols() << std::endl;
     // std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
     probabilities = exp_values.transpose() * (exp_values.rowwise().sum().asDiagonal().inverse()); // normalized probabilities
@@ -145,22 +145,49 @@ double Loss::calculate(Eigen::MatrixXd output, Eigen::VectorXd y) {
 
 
 // SGD functions declaration
-void StochasticGradientDescent::pre_update_params() {
-    learning_rate = learning_rate * (1 / (1 + decay * iterations));
-    this->learning_rate = learning_rate;
-    std::cout << "learning_rate:  " << learning_rate << std::endl;
+void StochasticGradientDescent::pre_update_params(double start_learning_rate) {
+    if (decay != 0.0) {
+        // std::cout << "yes" << std::endl;
+        // this->learning_rate = learning_rate;
+        learning_rate = start_learning_rate * (1.0 / (1.0 + (decay * iterations)));
+        // this->learning_rate = learning_rate;
+        // std::cout << "learning_rate:  " << learning_rate << std::endl;
+        // std::cout << "iterations:  " << iterations << std::endl;
+
+        // std::cout << "iterations:  " << iterations << std::endl;
+    }
 }
 
-void StochasticGradientDescent::update_params(LayerDense layer) {
+void StochasticGradientDescent::update_params(LayerDense &layer) {
     // std::cout << "The matrix optimizer layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
     // std::cout << "The matrix optimizer layer.dweights is of size " << layer.dweights.rows() << "x" << layer.dweights.cols() << std::endl;
     // std::cout << "The matrix optimizer layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
     // std::cout << "The matrix optimizer layer.dbiases is of size " << layer.dbiases.rows() << "x" << layer.dbiases.cols() << std::endl;
     
-    layer.weights += (-layer.dweights * learning_rate);
-    // std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
-    layer.biases += (-learning_rate * layer.dbiases);
-    // std::cout << "The matrix layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
+    Eigen::MatrixXd weight_updates;
+    Eigen::VectorXd bias_updates;
+
+    if (momentum != 0.0) {
+        weight_updates = momentum * layer.weight_momentums - learning_rate * layer.dweights;
+        layer.weight_momentums = weight_updates;
+        bias_updates = momentum * layer.bias_momentums - learning_rate * layer.dbiases;
+        layer.bias_momentums = bias_updates;
+    } else {
+        // std::cout << "here" << std::endl;
+        // std::cout << "learning_rate here:  " << learning_rate << std::endl;
+        weight_updates = - learning_rate * layer.dweights;
+        bias_updates =- learning_rate * layer.dbiases;
+    }
+    layer.weights += weight_updates;
+    layer.biases += bias_updates;
+
+    layer.weights = layer.weights;
+    layer.biases  = layer.biases;
+
+    // layer.weights += (-layer.dweights * learning_rate);
+    // // std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
+    // layer.biases += (-learning_rate * layer.dbiases);
+    // // std::cout << "The matrix layer.biases is of size " << layer.biases.rows() << "x" << layer.biases.cols() << std::endl;
 }
 
 void StochasticGradientDescent::post_update_params() {

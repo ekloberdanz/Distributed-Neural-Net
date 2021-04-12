@@ -26,10 +26,11 @@ int main() {
     std::cout << "The vector y_train is of size " << y_train.rows() << "x" << y_train.cols() << std::endl;
 
     // Parameters
-    int NUM_CLASSES = 3;
-    double decay = 1e-3;
-    double momentum = 0.9;
-    double learning_rate = 1.0;
+    int NUM_CLASSES = 3.0;
+    // double decay = 1e-3;
+    // double decay = 0.0;
+    // double momentum = 0.0;
+    double start_learning_rate = 1.0;
 
     // Create for neural network objects
     LayerDense dense_layer_1(2, 64);
@@ -37,13 +38,17 @@ int main() {
     LayerDense dense_layer_2(64, NUM_CLASSES);
     ActivationSoftmax activation_softmax;
     Loss loss_categorical_crossentropy;
-    StochasticGradientDescent optimizer_SGD(learning_rate=learning_rate, decay=decay, momentum=momentum);
+    StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
 
     // std::cout << "The matrix dense_layer_1.weights is of size " << dense_layer_1.weights.rows() << "x" << dense_layer_1.weights.cols() << std::endl;
     // std::cout << "The matrix dense_layer_1.biases is of size " << dense_layer_1.biases.rows() << "x" << dense_layer_1.biases.cols() << std::endl;
     // std::cout << "The matrix dense_layer_2.weights is of size " << dense_layer_2.weights.rows() << "x" << dense_layer_2.weights.cols() << std::endl;
     // std::cout << "The matrix dense_layer_2.biases is of size " << dense_layer_2.biases.rows() << "x" << dense_layer_2.biases.cols() << std::endl;
-    // std::cout << dense_layer_1.biases;
+
+    // std::cout << dense_layer_1.weights << std::endl;
+    // std::cout << dense_layer_1.biases << std::endl;
+    // std::cout << dense_layer_2.weights << std::endl;
+    // std::cout << dense_layer_2.biases << std::endl;
 
     // variables
     double loss;
@@ -51,9 +56,9 @@ int main() {
     double test_accuracy;
 
     // Train DNN
-    int NUMBER_OF_EPOCHS = 10;
+    int NUMBER_OF_EPOCHS = 1000;
     for (int epoch : boost::irange(1,NUMBER_OF_EPOCHS+1)) {
-        std::cout << epoch << "\n";
+        // std::cout << epoch << "\n";
 
         ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
         dense_layer_1.forward(X_train);
@@ -81,10 +86,21 @@ int main() {
             predictions(i) = index_pred;
             pred_truth_comparison(i) = predictions(i) == y_train(i);
         }
+
+        // std::cout << dense_layer_1.output << std::endl;
+        // std::cout << activation_relu.output << std::endl;
+        // std::cout << dense_layer_2.output << std::endl;
+        // std::cout << activation_softmax.output << std::endl;
+
         // std::cout << "The vector predictions is of size " << predictions.rows() << "x" << predictions.cols() << std::endl;
         // std::cout << "The vector pred_truth_comparison is of size " << pred_truth_comparison.rows() << "x" << pred_truth_comparison.cols() << std::endl;
         train_accuracy = pred_truth_comparison.mean();
-        std::cout << "train_accuracy: " << train_accuracy << std::endl;
+        if (epoch % 100 == 0) {
+            std::cout << "epoch: " << epoch << std::endl;
+            std::cout << "train_accuracy: " << train_accuracy << std::endl;
+            std::cout << "learning_rate: " << optimizer_SGD.learning_rate << std::endl;
+            std::cout << "loss: " << loss << std::endl;
+        }
 
         ////////////////////////////////////////////////////////////backward pass/////////////////////////////////////////////////////////////////////////
         loss_categorical_crossentropy.backward(activation_softmax.output.transpose(), y_train);
@@ -100,10 +116,18 @@ int main() {
 
 
         ////////////////////////////////////////////////////////////optimizer - update weights and biases/////////////////////////////////////////////////////////////////////////
-        optimizer_SGD.pre_update_params();
+        optimizer_SGD.pre_update_params(start_learning_rate);
         optimizer_SGD.update_params(dense_layer_1);
         optimizer_SGD.update_params(dense_layer_2);
         optimizer_SGD.post_update_params();
+
+
+        // std::cout << optimizer_SGD.learning_rate << std::endl;
+
+        // std::cout << dense_layer_1.weights << std::endl;
+        // std::cout << dense_layer_1.biases << std::endl;
+        // std::cout << dense_layer_2.weights << std::endl;
+        // std::cout << dense_layer_2.biases << std::endl;
     }
 
     // Test DNN
