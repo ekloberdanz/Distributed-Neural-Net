@@ -7,7 +7,7 @@
 # 	g++ main.cpp NeuralNet.cpp -o neuralnet_serial -g -O3
 
 CXX=g++
-OPT=-g -O3
+OPT=-g -O3 -Wall -Wextra -Wpedantic
 CXXFLAGS=$(OPT)
 
 neuralnet: main.o NeuralNet.o

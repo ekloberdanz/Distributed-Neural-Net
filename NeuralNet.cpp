@@ -4,42 +4,57 @@
 #include <eigen3/Eigen/Dense>
 
 // LayerDense functions definitions
-void LayerDense::forward(Eigen::MatrixXd inputs) {
-    this->inputs = inputs;
-    Eigen::MatrixXd output = (inputs * weights).rowwise() + biases.transpose();
+void LayerDense::forward(const Eigen::MatrixXd &inputs) {
+    // this->inputs = inputs;
+    // std::cout << "The matrix biases is of size " << biases.rows() << "x" << biases.cols() << std::endl;
+    // std::cout << "The matrix inputs is of size " << inputs.rows() << "x" << inputs.cols() << std::endl;
+    // std::cout << "The matrix weights is of size " << weights.rows() << "x" << weights.cols() << std::endl;
+
+    // std::cout << "The matrix (inputs * weights) is of size " << (inputs * weights).rows() << "x" << (inputs * weights).cols() << std::endl;
+    output = (inputs * weights).rowwise() + biases.transpose();
+    // std::cout << "The matrix output is of size " << output.rows() << "x" << output.cols() << std::endl;
     // std::cout <<  typeid(output).name() << std::endl;
     // std::cout << "The matrix output is of size " << output.rows() << "x" << output.cols() << std::endl;
-    this->output = output;
+    // this->output = output;
     // Eigen::MatrixXd output = inputs * weights;
 }
 
-void LayerDense::backward(Eigen::MatrixXd dvalues) {
-    Eigen::MatrixXd dweights = inputs.transpose() * dvalues;
+void LayerDense::backward(const Eigen::MatrixXd &dvalues, const Eigen::MatrixXd &inputs) {
+    // std::cout << "The matrix inputs is of size " << inputs.rows() << "x" << inputs.cols() << std::endl;
+    // std::cout << "The matrix dvalues is of size " << dvalues.rows() << "x" << dvalues.cols() << std::endl;
+    // std::cout << "The matrix output is of size " << this->inputs.rows() << "x" << this->inputs.cols() << std::endl;
+    dweights = inputs.transpose() * dvalues;
+    // std::cout << "The matrix dvalues is of size " << dvalues.rows() << "x" << dvalues.cols() << std::endl;
     // std::cout << "The matrix dweights is of size " << dweights.rows() << "x" << dweights.cols() << std::endl;
-    Eigen::VectorXd dbiases = dvalues.colwise().sum();
+    dbiases = dvalues.colwise().sum();
     // std::cout << "The matrix dbiases is of size " << dbiases.rows() << "x" << dbiases.cols() << std::endl;
-    Eigen::MatrixXd dinputs = weights * dvalues.transpose();
+    dinputs = weights * dvalues.transpose();
     // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
-    this->dinputs = dinputs;
-    this->dweights = dweights;
-    this->dbiases = dbiases;
+
+
+    // std::cout << "this: " << typeid(this).name() << std::endl;
+    // std::cout << "here dbiases: " << dbiases << std::endl;
+    // std::cout << "here biases: " << biases << std::endl;
+
+
 }
 
 // ActivationRelu functions definitions
-void ActivationRelu::forward(Eigen::MatrixXd in) {
+void ActivationRelu::forward(const Eigen::MatrixXd &in) {
     inputs = in;
     output = (inputs.array() < 0).select(0, inputs);
-    this->output = output;
+    // std::cout << "output " << output << std::endl;
+    // this->output = output;
 }
 
-void ActivationRelu::backward(Eigen::MatrixXd dvalues) {
+void ActivationRelu::backward(const Eigen::MatrixXd &dvalues) {
     dinputs = (dvalues.array() <= 0).select(0, dvalues);
     // std::cout << "The matrix in dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     this->dinputs = dinputs;
 }
 
 // ActivationSoftmax functions definitions
-void ActivationSoftmax::forward(Eigen::MatrixXd in) {
+void ActivationSoftmax::forward(const Eigen::MatrixXd &in) {
     inputs = in;
     // std::cout << "The matrix inputs is of size " << inputs.rows() << "x" << inputs.cols() << std::endl;
    
@@ -56,16 +71,17 @@ void ActivationSoftmax::forward(Eigen::MatrixXd in) {
     // std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
     probabilities = exp_values.transpose() * (exp_values.rowwise().sum().asDiagonal().inverse()); // normalized probabilities
     output = probabilities;
-    this->output = output;
+    // this->output = output;
 }
 
-void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
+void ActivationSoftmax::backward(const Eigen::MatrixXd &dvalues) {
     Eigen::MatrixXd jacobian_matrix;
     Eigen::MatrixXd single_output;
     Eigen::VectorXd single_dvalues;
-    Eigen::MatrixXd dinputs(dvalues.rows(),dvalues.cols());
+    // Eigen::MatrixXd dinputs(dvalues.rows(),dvalues.cols());
     Eigen::MatrixXd single_output_one_hot_encoded;  
     int labels = dvalues.cols();
+
 
     //for (i, (single_output, single_dvalues) in enum boost::combine(output, dvalues); i++) {
     for (int i = 0; i < dvalues.rows(); i++)    {
@@ -85,15 +101,22 @@ void ActivationSoftmax::backward(Eigen::MatrixXd dvalues) {
         // std::cout << "The vector dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
         Eigen::VectorXd gradient = jacobian_matrix * single_dvalues;
         // std::cout << "The vector gradient is of size " << gradient.rows() << "x" << gradient.cols() << std::endl;
-        for (int col=0; col < dinputs.cols(); col++) {
+        // std::cout << "The vector dvalues is of size " << dvalues.rows() << "x" << dvalues.cols() << std::endl;
+        dinputs = Eigen::MatrixXd:: Zero(dvalues.rows(),dvalues.cols());
+        for (int col=0; col < dvalues.cols(); col++) {
+            // std::cout << col << std::endl;
             dinputs(i, col) = gradient(col);
             }
         }    
-    this->dinputs = dinputs;
+    // std::cout << "Here The matrix dinputs: " << dinputs.mean() << std::endl;    
+    // this->dinputs = dinputs;
 }
 
-// Loss functions definitions
-Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
+// CrossEntropyLoss functions definitions
+Eigen::VectorXd CrossEntropyLoss::forward(const Eigen::MatrixXd &y_pred, const Eigen::VectorXd &y_true) {
+    // std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
+    // std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
+   
     int samples = y_true.rows();
     
     // std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
@@ -110,15 +133,18 @@ Eigen::VectorXd Loss::forward(Eigen::MatrixXd y_pred, Eigen::VectorXd y_true) {
         // std::cout << "confidence: " << conf << std::endl;
         correct_confidences(r) = conf;
     }
-    // std::cout << "samples: " << samples << std::endl;
+    // std::cout << "correct_confidences: " << correct_confidences << std::endl;
     // std::cout << "The vector correct_confidences is of size " << correct_confidences.rows() << "x" << correct_confidences.cols() << std::endl;
-    Eigen::VectorXd negative_log_likelihoods = correct_confidences.array().log();
+    Eigen::VectorXd negative_log_likelihoods = - (correct_confidences.array().log());
+    // std::cout << "negative_log_likelihoods: " << negative_log_likelihoods << std::endl;
     return negative_log_likelihoods;
 }
 
-void Loss::backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true) {
-    int samples = dvalues.rows();
-    int labels = dvalues.cols();
+void CrossEntropyLoss::backward(const Eigen::MatrixXd &dvalues, const Eigen::VectorXd &y_true) {
+    // std::cout << "The matrix dvalues is of size " << dvalues.rows() << "x" << dvalues.cols() << std::endl;
+    // std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
+    int samples = dvalues.cols();
+    int labels = dvalues.rows();
     int index;
     Eigen::MatrixXd y_true_one_hot_encoded;
     y_true_one_hot_encoded = Eigen::MatrixXd::Zero(samples, labels);
@@ -129,17 +155,20 @@ void Loss::backward(Eigen::MatrixXd dvalues, Eigen::VectorXd y_true) {
     // std::cout << "y_true_one_hot_encoded " << y_true_one_hot_encoded;
     // std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
     // Calculate gradient
-    dinputs = - y_true_one_hot_encoded.array() / dvalues.array();
+    dinputs = - (y_true_one_hot_encoded.array() / dvalues.transpose().array());
     // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     // Normalize gradient
     dinputs = dinputs/double(samples);
     // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     this->dinputs = dinputs;
+    // std::cout << "loss_categorical_crossentropy.dinputs" << dinputs << std::endl;
+
 }
 
-double Loss::calculate(Eigen::MatrixXd output, Eigen::VectorXd y) {
-    Eigen::VectorXd sample_losses = Loss::forward(output, y);
+double CrossEntropyLoss::calculate(const Eigen::MatrixXd &output, const Eigen::VectorXd &y) {
+    Eigen::VectorXd sample_losses = this->forward(output, y);
     double data_loss = sample_losses.mean();
+    // std::cout << "data_loss: " << data_loss << std::endl;
     return data_loss;
 }
 
@@ -175,14 +204,18 @@ void StochasticGradientDescent::update_params(LayerDense &layer) {
     } else {
         // std::cout << "here" << std::endl;
         // std::cout << "learning_rate here:  " << learning_rate << std::endl;
-        weight_updates = - learning_rate * layer.dweights;
-        bias_updates =- learning_rate * layer.dbiases;
+        weight_updates = -learning_rate * layer.dweights;
+        bias_updates = -learning_rate * layer.dbiases;
+        // std::cout << "here" << std::endl;
     }
+    // std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
+    // std::cout << "The matrix layer.dweights is of size " << layer.dweights.rows() << "x" << layer.dweights.cols() << std::endl;
+    // std::cout << "The matrix weight_updates is of size " << weight_updates.rows() << "x" << weight_updates.cols() << std::endl;
     layer.weights += weight_updates;
     layer.biases += bias_updates;
 
-    layer.weights = layer.weights;
-    layer.biases  = layer.biases;
+    // layer.weights = layer.weights;
+    // layer.biases  = layer.biases;
 
     // layer.weights += (-layer.dweights * learning_rate);
     // // std::cout << "The matrix layer.weights is of size " << layer.weights.rows() << "x" << layer.weights.cols() << std::endl;
