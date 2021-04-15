@@ -33,16 +33,11 @@ class LayerDense {
             this->n_neurons = n_neurons;
             this->weight_momentums = Eigen::MatrixXd::Zero(n_inputs,n_neurons); // weight momentum
             this->bias_momentums = Eigen::VectorXd::Zero(n_neurons); // bias momentum
-            this->dweights = dweights;
-            this->dbiases = dbiases;
-            this->dinputs = dinputs;
-            this->output = output;
-            this->inputs = inputs;
         } 
 
         // Member functions declaration
         void forward(const Eigen::MatrixXd &inputs);
-        void backward(const Eigen::MatrixXd &dvalues, const Eigen::MatrixXd &inputs);
+        void backward(const Eigen::MatrixXd &dvalues);
 };
 
 class ActivationRelu {
@@ -51,7 +46,6 @@ class ActivationRelu {
         Eigen::MatrixXd dinputs; // derivative wrt inputs
         Eigen::MatrixXd output;
         // dinputs = Eigen::MatrixXd:: Zero(dvalues.rows(),dvalues.cols());
-
 
         // Member functions declaration
         void forward(const Eigen::MatrixXd &inputs);
@@ -65,11 +59,6 @@ class ActivationSoftmax {
         Eigen::MatrixXd dinputs; // derivative wrt inputs
         Eigen::MatrixXd output;
 
-    ActivationSoftmax(){
-        this->dinputs = dinputs;
-        this->output = output;
-
-    }
         // Member functions declaration
         void forward(const Eigen::MatrixXd &inputs);
         void backward(const Eigen::MatrixXd &dvalues);
@@ -97,7 +86,6 @@ class StochasticGradientDescent {
             this->learning_rate = learning_rate;
             this->decay = decay;
             this->momentum = momentum;
-            this->iterations = iterations;
         } 
 
         // Member functions declaration
