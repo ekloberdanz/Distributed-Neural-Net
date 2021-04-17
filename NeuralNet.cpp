@@ -58,7 +58,7 @@ void ActivationRelu::backward(const Eigen::MatrixXd &dvalues) {
     // dinputs = dvalues;
     // std::cout << "dinputs" << dinputs.mean() << std::endl;
     // std::cout << "dvalues" << dvalues.mean() << std::endl;
-    dinputs = (dvalues.array() <= 0).select(0, dvalues).transpose();
+    dinputs = (inputs.array() <= 0).select(0, dvalues);
     // std::cout << "The matrix in dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     // std::cout << "dinputs" << dinputs << std::endl;
 
