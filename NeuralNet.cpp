@@ -149,8 +149,8 @@ void ActivationSoftmax::backward(const Eigen::MatrixXd &dvalues) {
 
 // CrossEntropyLoss functions definitions
 Eigen::VectorXd CrossEntropyLoss::forward(const Eigen::MatrixXd &y_pred, const Eigen::VectorXd &y_true) {
-    // std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
-    // std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
+    std::cout << "The matrix y_pred is of size " << y_pred.rows() << "x" << y_pred.cols() << std::endl;
+    std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
    
     int samples = y_true.rows();
     
@@ -179,8 +179,8 @@ Eigen::VectorXd CrossEntropyLoss::forward(const Eigen::MatrixXd &y_pred, const E
 void CrossEntropyLoss::backward(const Eigen::MatrixXd &dvalues, const Eigen::VectorXd &y_true) {
     // std::cout << "The matrix dvalues is of size " << dvalues.rows() << "x" << dvalues.cols() << std::endl;
     // std::cout << "The vector y_true is of size " << y_true.rows() << "x" << y_true.cols() << std::endl;
-    int samples = dvalues.cols();
-    int labels = dvalues.rows();
+    int samples = dvalues.rows();
+    int labels = dvalues.cols();
     int index;
     Eigen::MatrixXd y_true_one_hot_encoded;
     y_true_one_hot_encoded = Eigen::MatrixXd::Zero(samples, labels);
@@ -188,13 +188,13 @@ void CrossEntropyLoss::backward(const Eigen::MatrixXd &dvalues, const Eigen::Vec
         index = y_true(r);
         y_true_one_hot_encoded(r, index) = 1;
     }
-    // std::cout << "y_true_one_hot_encoded " << y_true_one_hot_encoded;
-    // std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
+    std::cout << "\ny_true_one_hot_encoded" << y_true_one_hot_encoded;
+    std::cout << "The matrix y_true_one_hot_encoded is of size " << y_true_one_hot_encoded.rows() << "x" << y_true_one_hot_encoded.cols() << std::endl;
     // Calculate gradient
-    dinputs = - (y_true_one_hot_encoded.array() / dvalues.transpose().array());
-    // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
+    dinputs = - (y_true_one_hot_encoded.array() / dvalues.array());
+    std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     // Normalize gradient
-    dinputs = dinputs/double(samples);
+    dinputs = dinputs * (1/double(samples));
     // std::cout << "The matrix dinputs is of size " << dinputs.rows() << "x" << dinputs.cols() << std::endl;
     // this->dinputs = dinputs;
     // std::cout << "loss_categorical_crossentropy dinputs" << dinputs.mean() << std::endl;

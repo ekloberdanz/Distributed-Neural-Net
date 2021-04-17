@@ -38,7 +38,7 @@ int main() {
     LayerDense dense_layer_2(64, NUM_CLASSES);
     ActivationSoftmax activation_softmax;
     CrossEntropyLoss loss_categorical_crossentropy;
-    StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.0);
+    StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
 
     // std::cout << "The matrix dense_layer_1.weights is of size " << dense_layer_1.weights.rows() << "x" << dense_layer_1.weights.cols() << std::endl;
     // std::cout << "The matrix dense_layer_1.biases is of size " << dense_layer_1.biases.rows() << "x" << dense_layer_1.biases.cols() << std::endl;
