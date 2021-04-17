@@ -1,0 +1,17 @@
+CXX=g++
+OPT=-g -O3 -Wall -Wextra -Wpedantic
+CXXFLAGS=$(OPT) -std=c++11
+
+test: test.o NeuralNet.o
+	$(CXX) -o test test.o NeuralNet.o $(CXXFLAGS)
+
+test.o: test.cpp NeuralNet.hpp
+	$(CXX) -o test.o -c test.cpp $(CXXFLAGS)
+
+NeuralNet.o: NeuralNet.hpp NeuralNet.cpp
+	$(CXX) -o NeuralNet.o -c NeuralNet.cpp $(CXXFLAGS)
+
+.PHONY: clean
+clean:
+	rm -f *.o
+	rm -f test

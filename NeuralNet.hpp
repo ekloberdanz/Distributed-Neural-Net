@@ -79,13 +79,14 @@ class StochasticGradientDescent {
         double learning_rate; // learning rate
         double decay; // decay
         double momentum; // momentum
-        double iterations = 0.0; // initialize number of iterations to 0
+        double iterations; // initialize number of iterations to 0
 
         // constructor
         StochasticGradientDescent(double learning_rate, double decay, double momentum) {
             this->learning_rate = learning_rate;
             this->decay = decay;
             this->momentum = momentum;
+            this->iterations = 0.0;
         } 
 
         // Member functions declaration

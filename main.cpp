@@ -56,18 +56,18 @@ int main() {
     double test_accuracy;
 
     // Train DNN
-    int NUMBER_OF_EPOCHS = 10;
+    int NUMBER_OF_EPOCHS = 100;
     for (int epoch : boost::irange(1,NUMBER_OF_EPOCHS+1)) {
-        std::cout << epoch << "\n";
+        // std::cout << epoch << "\n";
 
         ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
-        std::cout << "Layer 1" << "\n";
+        // std::cout << "Layer 1" << "\n";
         dense_layer_1.forward(X_train);
         // std::cout << "The matrix dense_layer_1.output is of size " << dense_layer_1.output.rows() << "x" << dense_layer_1.output.cols() << std::endl;
         activation_relu.forward(dense_layer_1.output);
         // std::cout << "The matrix activation_relu.output is of size " << activation_relu.output.rows() << "x" << activation_relu.output.cols() << std::endl;
         // std::cout << "The matrix activation_relu.output " << activation_relu.output << std::endl;
-        std::cout << "Layer 2" << "\n";
+        // std::cout << "Layer 2" << "\n";
         dense_layer_2.forward(activation_relu.output);
         // std::cout << "The matrix dense_layer_2.output is of size " << dense_layer_2.output.rows() << "x" << dense_layer_2.output.cols() << std::endl;
         activation_softmax.forward(dense_layer_2.output);
@@ -81,16 +81,21 @@ int main() {
         Eigen::VectorXd pred_truth_comparison(activation_softmax.output.cols());
         double pred;
         int index_pred;
+
+        Eigen::VectorXi predictions_int = predictions.cast <int> ();
+        Eigen::VectorXi y_train_int = y_train.cast <int> ();
+
+
         for (int i=0; i < activation_softmax.output.cols(); i++) {
             // std::cout << "i: " << i << std::endl;
             pred = activation_softmax.output.col(i).maxCoeff(&maxRow, &maxCol);
             // std::cout << "pred: " << pred << std::endl;
             index_pred = maxRow;
             // std::cout << "index_pred: " << index_pred << std::endl;
-            predictions(i) = index_pred;
-            // std::cout << "predictions(i): " << predictions(i) << std::endl;
-            // std::cout << "y_train(i): " << y_train(i) << std::endl;
-            pred_truth_comparison(i) = predictions(i) == y_train(i);
+            predictions_int(i) = index_pred;
+            // std::cout << "predictions_int(i): " << predictions_int(i) << std::endl;
+            // std::cout << "y_train_int(i): " << y_train_int(i) << std::endl;
+            pred_truth_comparison(i) = predictions_int(i) == y_train_int(i);
             // std::cout << "pred_truth_comparison(i): " << pred_truth_comparison(i) << std::endl;
         }
         // std::cout << predictions << std::endl;
@@ -123,16 +128,16 @@ int main() {
 
         ////////////////////////////////////////////////////////////backward pass/////////////////////////////////////////////////////////////////////////
         loss_categorical_crossentropy.backward(activation_softmax.output, y_train);
-        std::cout << "The matrix loss_categorical_crossentropy.dinputs is of size " << loss_categorical_crossentropy.dinputs.rows() << "x" << loss_categorical_crossentropy.dinputs.cols() << std::endl;
+        // std::cout << "The matrix loss_categorical_crossentropy.dinputs is of size " << loss_categorical_crossentropy.dinputs.rows() << "x" << loss_categorical_crossentropy.dinputs.cols() << std::endl;
         // std::cout << "loss_categorical_crossentropy.dinputs" << loss_categorical_crossentropy.dinputs << std::endl;
         activation_softmax.backward(loss_categorical_crossentropy.dinputs);
-        std::cout << "The matrix activation_softmax.dinputs is of size " << activation_softmax.dinputs.rows() << "x" << activation_softmax.dinputs.cols() << std::endl;
+        // std::cout << "The matrix activation_softmax.dinputs is of size " << activation_softmax.dinputs.rows() << "x" << activation_softmax.dinputs.cols() << std::endl;
         dense_layer_2.backward(activation_softmax.dinputs);
-        std::cout << "The matrix dense_layer_2.dinputs is of size " << dense_layer_2.dinputs.rows() << "x" << dense_layer_2.dinputs.cols() << std::endl;
+        // std::cout << "The matrix dense_layer_2.dinputs is of size " << dense_layer_2.dinputs.rows() << "x" << dense_layer_2.dinputs.cols() << std::endl;
         activation_relu.backward(dense_layer_2.dinputs);
-        std::cout << "The matrix activation_relu.dinputs is of size " << activation_relu.dinputs.rows() << "x" << activation_relu.dinputs.cols() << std::endl;
+        // std::cout << "The matrix activation_relu.dinputs is of size " << activation_relu.dinputs.rows() << "x" << activation_relu.dinputs.cols() << std::endl;
         dense_layer_1.backward(activation_relu.dinputs);
-        std::cout << "The matrix dense_layer_1.dinputs is of size " << dense_layer_1.dinputs.rows() << "x" << dense_layer_1.dinputs.cols() << std::endl;
+        // std::cout << "The matrix dense_layer_1.dinputs is of size " << dense_layer_1.dinputs.rows() << "x" << dense_layer_1.dinputs.cols() << std::endl;
 
         // std::cout << "dense_layer_1.biases: " << dense_layer_2.biases << std::endl;
         // std::cout << "dense_layer_1.dbiases: " << dense_layer_2.biases << std::endl;
@@ -140,17 +145,17 @@ int main() {
 
         ////////////////////////////////////////////////////////////optimizer - update weights and biases/////////////////////////////////////////////////////////////////////////
         optimizer_SGD.pre_update_params(start_learning_rate);
-        optimizer_SGD.update_params(dense_layer_1);
         optimizer_SGD.update_params(dense_layer_2);
+        optimizer_SGD.update_params(dense_layer_1);
         optimizer_SGD.post_update_params();
 
 
         // std::cout << optimizer_SGD.learning_rate << std::endl;
 
-        std::cout << dense_layer_1.weights.mean() << std::endl;
-        std::cout << dense_layer_1.biases.mean() << std::endl;
-        std::cout << dense_layer_2.weights.mean() << std::endl;
-        std::cout << dense_layer_2.biases.mean() << std::endl;
+        // std::cout << dense_layer_1.weights.mean() << std::endl;
+        // std::cout << dense_layer_1.biases.mean() << std::endl;
+        // std::cout << dense_layer_2.weights.mean() << std::endl;
+        // std::cout << dense_layer_2.biases.mean() << std::endl;
 
 
     }
@@ -172,14 +177,16 @@ int main() {
     Eigen::VectorXd pred_truth_comparison(activation_softmax.output.cols());
     double pred;
     int index_pred;
+    Eigen::VectorXi predictions_int = predictions.cast <int> ();
+    Eigen::VectorXi y_test_int = y_test.cast <int> ();
     for (int i=0; i < activation_softmax.output.cols(); i++) {
         // std::cout << "i: " << i << std::endl;
         pred = activation_softmax.output.col(i).maxCoeff(&maxRow, &maxCol);
         // std::cout << "pred: " << pred << std::endl;
         index_pred = maxRow;
         // std::cout << "index_pred: " << index_pred << std::endl;
-        predictions(i) = index_pred;
-        pred_truth_comparison(i) = predictions(i) == y_test(i);
+        predictions_int(i) = index_pred;
+        pred_truth_comparison(i) = predictions_int(i) == y_test_int(i);
     }
     // std::cout << "The vector predictions is of size " << predictions.rows() << "x" << predictions.cols() << std::endl;
     // std::cout << "The vector pred_truth_comparison is of size " << pred_truth_comparison.rows() << "x" << pred_truth_comparison.cols() << std::endl;
