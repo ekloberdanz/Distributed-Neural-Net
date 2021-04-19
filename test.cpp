@@ -55,6 +55,7 @@ int main() {
     // Eigen::MatrixXd test_out;
     // test_in.row(0) << 1, 2, 3;
     // test_in.row(1) << 4, 5, 6;
+    // std::cout << "dense1.biases is of size " << dense1.biases.rows() << "x" << dense1.biases.cols() << std::endl;
     // Eigen::MatrixXd weights(2, 3);
     // weights.row(0) << 1.0, -1.0, 0.5;
     // weights.row(1) << 0.5, -0.1, 2.0;
@@ -153,38 +154,38 @@ int main() {
     // std::cout << "test_out" << "\n" << test_out << std::endl;
 
     // test optimizer update_params - OK
-    LayerDense dense1(2, 3);
-    Eigen::MatrixXd test_in(2, 3);
-    Eigen::MatrixXd test_out_w;
-    Eigen::VectorXd test_out_b;
-    test_in.row(0) << 1, 2, 3;
-    test_in.row(1) << 4, 5, 6;
+    // LayerDense dense1(2, 3);
+    // Eigen::MatrixXd test_in(2, 3);
+    // Eigen::MatrixXd test_out_w;
+    // Eigen::VectorXd test_out_b;
+    // test_in.row(0) << 1, 2, 3;
+    // test_in.row(1) << 4, 5, 6;
 
-    Eigen::MatrixXd weights(2, 3);
-    weights.row(0) << 1.0, -1.0, 0.5;
-    weights.row(1) << 0.5, -0.1, 2.0;
-    dense1.weights = weights;
+    // Eigen::MatrixXd weights(2, 3);
+    // weights.row(0) << 1.0, -1.0, 0.5;
+    // weights.row(1) << 0.5, -0.1, 2.0;
+    // dense1.weights = weights;
 
-    Eigen::MatrixXd dweights(2, 3);
-    dweights.row(0) << 0.1, -0.1, 0.5;
-    dweights.row(1) << 0.7, -0.2, 1.1;
-    dense1.dweights = dweights;
+    // Eigen::MatrixXd dweights(2, 3);
+    // dweights.row(0) << 0.1, -0.1, 0.5;
+    // dweights.row(1) << 0.7, -0.2, 1.1;
+    // dense1.dweights = dweights;
 
-    Eigen::VectorXd biases(3);
-    biases << 0.02, -0.3, 0.56;
-    dense1.biases = biases;
+    // Eigen::VectorXd biases(3);
+    // biases << 0.02, -0.3, 0.56;
+    // dense1.biases = biases;
 
-    Eigen::VectorXd dbiases(3);
-    dbiases << 1.3, -1.6, 0.44;
-    dense1.dbiases = dbiases;
+    // Eigen::VectorXd dbiases(3);
+    // dbiases << 1.3, -1.6, 0.44;
+    // dense1.dbiases = dbiases;
 
-    StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
-    Eigen::MatrixXd test_out;
-    optimizer_SGD.iterations = 500;
-    optimizer_SGD.update_params(dense1);
-    test_out_w = dense1.weights;
-    std::cout << "test_out_w" << "\n" << test_out_w << std::endl;
-    test_out_b = dense1.biases;
-    std::cout << "test_out_b" << "\n" << test_out_b << std::endl;
+    // StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
+    // Eigen::MatrixXd test_out;
+    // optimizer_SGD.iterations = 500;
+    // optimizer_SGD.update_params(dense1);
+    // test_out_w = dense1.weights;
+    // std::cout << "test_out_w" << "\n" << test_out_w << std::endl;
+    // test_out_b = dense1.biases;
+    // std::cout << "test_out_b" << "\n" << test_out_b << std::endl;
 
 }   

@@ -26,10 +26,10 @@ class LayerDense {
         Eigen::MatrixXd dinputs; // derivative wrt inputs
 
         // constructor
-        LayerDense(int n_inputs, int n_neurons) {
-            // Eigen::Rand::Vmt19937_64 urng{ 42 };
+        LayerDense(int n_inputs, int n_neurons, const Eigen::MatrixXd &weights) {
             srand(42);
-            this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
+            // this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
+            this->weights = weights;
             this->biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
             this->n_inputs = n_inputs;
             this->n_neurons = n_neurons;
@@ -71,9 +71,9 @@ class CrossEntropyLoss {
         Eigen::MatrixXd dinputs;
 
         // Member functions declaration
-        Eigen::VectorXd forward(const Eigen::MatrixXd &y_pred, const Eigen::VectorXd &y_true);
-        double calculate(const Eigen::MatrixXd &output, const Eigen::VectorXd &y);
-        void backward(const Eigen::MatrixXd &dvalues, const Eigen::VectorXd &y_true);
+        Eigen::VectorXd forward(const Eigen::MatrixXd &y_pred, const Eigen::VectorXi &y_true);
+        double calculate(const Eigen::MatrixXd &output, const Eigen::VectorXi &y);
+        void backward(const Eigen::MatrixXd &dvalues, const Eigen::VectorXi &y_true);
 };
 
 class StochasticGradientDescent {
@@ -98,6 +98,6 @@ class StochasticGradientDescent {
 };
 
 Eigen::MatrixXd load_matrix_data(std::string fileToOpen);
-Eigen::VectorXd load_vector_data(std::string fileToOpen);
+Eigen::VectorXi load_vector_data(std::string fileToOpen);
 
 #endif // NEURALNET_HPP
