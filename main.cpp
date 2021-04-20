@@ -78,6 +78,7 @@ int main() {
         dense_layer_2.backward(activation_softmax.dinputs);
         activation_relu.backward(dense_layer_2.dinputs);
         dense_layer_1.backward(activation_relu.dinputs);
+
         ////////////////////////////////////////////////////////////debugging/////////////////////////////////////////////////////////////////////////
         // std::cout << "Type of y_train " <<   typeid(y_train).name() << std::endl;
         // std::cout << "Type of X_train " <<   typeid(X_train).name() << std::endl;
@@ -101,6 +102,7 @@ int main() {
         optimizer_SGD.update_params(dense_layer_1);
         optimizer_SGD.update_params(dense_layer_2);
         optimizer_SGD.post_update_params();
+        
         ////////////////////////////////////////////////////////////debugging/////////////////////////////////////////////////////////////////////////
         // std::cout << "\nepoch: " << epoch << "\n";
 

@@ -47,7 +47,6 @@ class ActivationRelu {
         Eigen::MatrixXd inputs; // inputs
         Eigen::MatrixXd dinputs; // derivative wrt inputs
         Eigen::MatrixXd output;
-        // dinputs = Eigen::MatrixXd:: Zero(dvalues.rows(),dvalues.cols());
 
         // Member functions declaration
         void forward(const Eigen::MatrixXd &inputs);
