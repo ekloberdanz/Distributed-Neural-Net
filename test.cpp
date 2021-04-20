@@ -187,5 +187,4 @@ int main() {
     // std::cout << "test_out_w" << "\n" << test_out_w << std::endl;
     // test_out_b = dense1.biases;
     // std::cout << "test_out_b" << "\n" << test_out_b << std::endl;
-
 }   
