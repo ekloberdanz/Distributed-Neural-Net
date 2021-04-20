@@ -138,9 +138,9 @@ void ActivationSoftmax::backward(const Eigen::MatrixXd &dvalues) {
         Eigen::VectorXd gradient = jacobian_matrix * single_dvalues;
         dinputs.row(i) = gradient;
 
-        std::cout << "\ndot_product\n" << dot_product << std::endl;
-        std::cout << "\njacobian_matrix\n" << jacobian_matrix << std::endl;
-        std::cout << "\ndinputs.row(i)\n" << dinputs.row(i) << std::endl;
+        // std::cout << "\ndot_product\n" << dot_product << std::endl;
+        // std::cout << "\njacobian_matrix\n" << jacobian_matrix << std::endl;
+        // std::cout << "\ndinputs.row(i)\n" << dinputs.row(i) << std::endl;
 
         // if (i == 100) {
         //     std::cout << "\nsingle_dvalues\n" << single_dvalues << std::endl;
