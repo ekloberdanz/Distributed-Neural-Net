@@ -14,7 +14,7 @@ nnfs.init()
 # y_test = y[split:]
 
 
-X_train, y_train = spiral_data(samples=1000, classes=3)
+X_train, y_train = spiral_data(samples=100, classes=3)
 X_test, y_test = spiral_data(samples=100, classes=3)
 
 np.savetxt("./data/X_train.csv", X_train, delimiter=",")

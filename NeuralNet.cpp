@@ -38,6 +38,7 @@ void LayerDense::backward(const Eigen::MatrixXd &dvalues) {
     // std::cout << "inputs: " << inputs.mean() << std::endl;
     // std::cout << "The matrix dvalues is of size " << dvalues.rows() << "x" << dvalues.cols() << std::endl;
     // std::cout << "The matrix dweights is of size " << dweights.rows() << "x" << dweights.cols() << std::endl;
+    // std::cout << "here dvalues: " << dvalues << std::endl;
     dbiases = dvalues.colwise().sum();
     // std::cout << "The matrix dbiases is of size " << dbiases.rows() << "x" << dbiases.cols() << std::endl;
     dinputs = dvalues * weights.transpose();
@@ -80,10 +81,10 @@ void ActivationSoftmax::forward(const Eigen::MatrixXd &inputs) {
     Eigen::MatrixXd probabilities;
 
     this->inputs = inputs;
-    // max_values.setZero();
+    // std::cout << "inputs" << inputs << std::endl;
     max_values = inputs.rowwise().maxCoeff(); // max
     // std::cout << "The vector max_values is of size " << max_values.rows() << "x" << max_values.cols() << std::endl;
-    // std::cout << max_values;
+    // std::cout << max_values << std::endl;
     exp_values = (inputs.colwise() - max_values).array().exp(); // unnormalized probabilities
     // std::cout << "The matrix exp_values is of size " << exp_values.rows() << "x" << exp_values.cols() << std::endl;
     // std::cout << "The vector exp_values.rowwise().sum() is of size " << exp_values.rowwise().sum().rows() << "x" << exp_values.rowwise().sum().cols() << std::endl;
@@ -96,7 +97,7 @@ void ActivationSoftmax::forward(const Eigen::MatrixXd &inputs) {
     // output.transpose();
     // std::cout << " softmax forward output" << output.mean() << std::endl;
     // std::cout << " softmax forward inputs" << inputs.mean() << std::endl;
-    // std::cout << output;
+    // std::cout << output << std::endl;
     // this->output = output;
     
 }
@@ -132,20 +133,25 @@ void ActivationSoftmax::backward(const Eigen::MatrixXd &dvalues) {
         // }
         // std::cout << "The matrix single_output is of size " << single_output.rows() << "x" << single_output.cols() << std::endl;
         // std::cout << "single_output.transpose() * single_output\n " << single_output.transpose() * single_output  << std::endl;
-        double dot_product = single_output.dot(single_output.transpose());
-        jacobian_matrix = (single_output_one_hot_encoded.array() - dot_product).matrix();
+        Eigen::MatrixXd dot_product = single_output * single_output.transpose();
+        jacobian_matrix = single_output_one_hot_encoded - dot_product;
         Eigen::VectorXd gradient = jacobian_matrix * single_dvalues;
         dinputs.row(i) = gradient;
-        if (i == 100) {
-            std::cout << "\nsingle_dvalues\n" << single_dvalues << std::endl;
-            std::cout << "\nsingle_output\n" << single_output << std::endl;
 
-            std::cout << "\nsingle_output\n" << single_output.rows() << "x" << single_output.cols() << std::endl;
+        std::cout << "\ndot_product\n" << dot_product << std::endl;
+        std::cout << "\njacobian_matrix\n" << jacobian_matrix << std::endl;
+        std::cout << "\ndinputs.row(i)\n" << dinputs.row(i) << std::endl;
 
-            std::cout << "\nsingle_output_one_hot_encoded\n" << single_output_one_hot_encoded << std::endl;
-            std::cout << "\njacobian_matrix\n" << jacobian_matrix << std::endl;
-            std::cout << "\ngradient\n " << gradient << std::endl;
-        }
+        // if (i == 100) {
+        //     std::cout << "\nsingle_dvalues\n" << single_dvalues << std::endl;
+        //     std::cout << "\nsingle_output\n" << single_output << std::endl;
+
+        //     std::cout << "\nsingle_output\n" << single_output.rows() << "x" << single_output.cols() << std::endl;
+
+        //     std::cout << "\nsingle_output_one_hot_encoded\n" << single_output_one_hot_encoded << std::endl;
+        //     std::cout << "\njacobian_matrix\n" << jacobian_matrix << std::endl;
+        //     std::cout << "\ngradient\n " << gradient << std::endl;
+        // }
     }    
 }
 
