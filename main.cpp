@@ -4,21 +4,26 @@
 #include <iostream>
 #include <boost/range/irange.hpp>
 #include <typeinfo>
-# include <mpi.h>
+#include <mpi.h>
+#include <stdio.h>
 
-int main() {
+int main(void) {
     // MPI initialization
-    int rank, comm_sz;
     MPI_Init(NULL, NULL);
+    int rank, comm_sz;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
+    std::cout << "number of processes: " << comm_sz << std::endl;
+    
+    
     // all
     // Dataset
-    Eigen::MatrixXd X_train;
-    Eigen::VectorXi y_train;
+    Eigen::MatrixXd X_train, X_train_subset;
+    Eigen::VectorXi y_train, y_train_subset;
     Eigen::MatrixXd X_test;
     Eigen::VectorXi y_test;
+    int message_size_X, message_size_y;
  
     // master holds all data
     if (rank == 0) {
@@ -32,29 +37,29 @@ int main() {
         int number_of_workers = comm_sz - 1;
         int data_subset_size = data_total_size/number_of_workers;
         int message_size_X = data_subset_size*X_train.cols();
-        int message_size_y = data_subset_size
+        int message_size_y = data_subset_size;
 
         // send a subset of data to each worker
         for (int dest=1; dest<=number_of_workers; dest++) {
             Eigen::MatrixXd X_train_subset = X_train.block((dest-1)*data_subset_size, 0, dest*data_subset_size, X_train.cols());
             Eigen::VectorXi y_train_subset = y_train.segment((dest-1)*data_subset_size, dest*data_subset_size);
 
-            MPI_Send(message_size_X, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send(X_train_subset, message_size_X, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(&message_size_X, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(&X_train_subset, message_size_X, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
 
-            MPI_Send(message_size_y, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send(y_train_subset, message_size_y, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(&message_size_y, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(&y_train_subset, message_size_y, MPI_INT, dest, 0, MPI_COMM_WORLD);
         }
     }
 
     // workers receive data from master
     if (rank != 0) {
         int source = 0;
-        MPI_Recv(message_size_X, 1, MPI_INT, source, 0, MPI_COMM_WORLD);
-        MPI_Recv(X_train_subset, message_size_X, MPI_DOUBLE, source, 0, MPI_COMM_WORLD);
+        MPI_Recv(&message_size_X, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&X_train_subset, message_size_X, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        MPI_Recv(message_size_y, 1, MPI_INT, source, 0, MPI_COMM_WORLD);
-        MPI_Recv(y_train_subset, message_size_y, MPI_DOUBLE, source, 0, MPI_COMM_WORLD);
+        MPI_Recv(&message_size_y, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&y_train_subset, message_size_y, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     // all
@@ -87,6 +92,7 @@ int main() {
 
     // Train DNN
     int NUMBER_OF_EPOCHS = 1000;
+
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         if (rank != 0) {
             ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
@@ -108,16 +114,6 @@ int main() {
             optimizer_SGD.update_params(dense_layer_2);
             optimizer_SGD.post_update_params();
 
-            // workers send weights and biases to master, who receives them
-            // MPI_Sendrecv(dense_layer_1.weights, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, 0, 0, 
-            //     dense_layer_1.weights, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            // MPI_Sendrecv(dense_layer_2.weights, dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, 0, 0,
-            //     dense_layer_2.weights, dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            // MPI_Sendrecv(dense_layer_1.biases, dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, 0, 0, 
-            //     dense_layer_1.biases, dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            // MPI_Sendrecv(dense_layer_2.biases, dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, 0,
-            //     dense_layer_2.biases, dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
             MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
 
             // workers send weights and biases to master, who uses them to compute a sum to compute average
@@ -129,10 +125,10 @@ int main() {
 
         if (rank ==0) {
             // compute average
-            dense_layer_1.weights = dense_layer_1.weights/number_of_workers;
-            dense_layer_2.weights = dense_layer_2.weights/number_of_workers;
-            dense_layer_1.biases = dense_layer_1.biases/number_of_workers;
-            dense_layer_2.weights = dense_layer_2.weights/number_of_workers;
+            dense_layer_1.weights = dense_layer_1.weights/(comm_sz-1);
+            dense_layer_2.weights = dense_layer_2.weights/(comm_sz-1);
+            dense_layer_1.biases = dense_layer_1.biases/(comm_sz-1);
+            dense_layer_2.weights = dense_layer_2.weights/(comm_sz-1);
 
             // broadcast new weights and biases to workers
             MPI_Bcast(&dense_layer_1.weights, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -145,9 +141,7 @@ int main() {
             activation_relu.forward(dense_layer_1.output);
             dense_layer_2.forward(activation_relu.output);
             activation_softmax.forward(dense_layer_2.output);
-            // calculate loss
             loss = loss_categorical_crossentropy.calculate(activation_softmax.output, y_train);
-            // get predictions and accuracy
             Eigen::MatrixXd::Index maxRow, maxCol;
             Eigen::VectorXi predictions(activation_softmax.output.rows());
             Eigen::VectorXd pred_truth_comparison(activation_softmax.output.rows());
@@ -192,4 +186,5 @@ int main() {
     }
 
     MPI_Finalize();
+    return 0;
 }
