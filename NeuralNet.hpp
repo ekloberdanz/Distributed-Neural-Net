@@ -26,9 +26,9 @@ class LayerDense {
         Eigen::MatrixXd dinputs; // derivative wrt inputs
 
         // constructor
-        LayerDense(int n_inputs, int n_neurons, const Eigen::MatrixXd &weights) {
+        LayerDense(int n_inputs, int n_neurons) {
             // srand(42);
-            // this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
+            this->weights = Eigen::MatrixXd::Random(n_inputs,n_neurons) * 0.01; // initialize weights
             this->weights = weights;
             this->biases = Eigen::VectorXd::Zero(n_neurons); // initialize biases
             this->n_inputs = n_inputs;

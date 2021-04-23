@@ -7,16 +7,21 @@
 #include <mpi.h>
 #include <stdio.h>
 
-int main(void) {
+int main() {
     // MPI initialization
-    MPI_Init(NULL, NULL);
     int rank, comm_sz;
+    MPI_Init(NULL, NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
-    std::cout << "number of processes: " << comm_sz << std::endl;
+    char const* tmp = getenv("TMPDIR");
+    std::string TMPDIR(tmp);
     
-    
+    //std::cout << "path " << get_current_dir_name() << std::endl;
+    std::cout << "envir " << TMPDIR << std::endl;
+    //std::cout << "number of processes: " << comm_sz << std::endl;
+     
+
     // all
     // Dataset
     Eigen::MatrixXd X_train, X_train_subset;
@@ -24,20 +29,60 @@ int main(void) {
     Eigen::MatrixXd X_test;
     Eigen::VectorXi y_test;
     int message_size_X, message_size_y;
- 
+    
+    // all
+    // Parameters
+    int NUM_CLASSES = 3;
+    double start_learning_rate = 1.0;
+
+    std:: cout << "I'm here and I'm rank: " << rank << std::endl;
+    
+    // all
+    // Load initial weights from csv file
+    //Eigen::MatrixXd w_1;
+    //Eigen::MatrixXd w_2;
+    //w_1 = load_matrix_data("./data/weights_1.csv");
+    //w_2 = load_matrix_data("./data/weights_2.csv");
+
+    //std::cout << "w1 : " << w_1.rows() << std::endl;
+    
+    // all
+    // Create for neural network objects
+    LayerDense dense_layer_1(2, 64);
+    ActivationRelu activation_relu;
+    LayerDense dense_layer_2(64, NUM_CLASSES);
+    ActivationSoftmax activation_softmax;
+    CrossEntropyLoss loss_categorical_crossentropy;
+    StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
+
+    // variables
+    double loss;
+    double train_accuracy;
+    double test_accuracy;
+    double pred;
+    int index_pred;
+
+    int NUMBER_OF_EPOCHS = 1000;
+    
     // master holds all data
     if (rank == 0) {
+        std:: cout << "I'm here " << rank << std::endl;
         // Load and randomly shuffle the training and testing data from the file
-        X_train = load_matrix_data("./data/X_train.csv");
-        y_train = load_vector_data("./data/y_train.csv");
-        X_test = load_matrix_data("./data/X_test.csv");
-        y_test = load_vector_data("./data/y_test.csv");
-
+        X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
+        y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
+        X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
+        y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
+        
         int data_total_size = X_train.rows(); // total number of train data points
+        std::cout << "data total rows " << data_total_size << std::endl;
         int number_of_workers = comm_sz - 1;
         int data_subset_size = data_total_size/number_of_workers;
         int message_size_X = data_subset_size*X_train.cols();
         int message_size_y = data_subset_size;
+
+
+        std::cout << "data total rows " << data_total_size << std::endl;
+
 
         // send a subset of data to each worker
         for (int dest=1; dest<=number_of_workers; dest++) {
@@ -62,37 +107,8 @@ int main(void) {
         MPI_Recv(&y_train_subset, message_size_y, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    // all
-    // Parameters
-    int NUM_CLASSES = 3;
-    double start_learning_rate = 1.0;
-
-    // all
-    // Load initial weights from csv file
-    Eigen::MatrixXd w_1;
-    Eigen::MatrixXd w_2;
-    w_1 = load_matrix_data("./data/weights_1.csv");
-    w_2 = load_matrix_data("./data/weights_2.csv");
-
-    // all
-    // Create for neural network objects
-    LayerDense dense_layer_1(2, 64, w_1);
-    ActivationRelu activation_relu;
-    LayerDense dense_layer_2(64, NUM_CLASSES, w_2);
-    ActivationSoftmax activation_softmax;
-    CrossEntropyLoss loss_categorical_crossentropy;
-    StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
-
-    // variables
-    double loss;
-    double train_accuracy;
-    double test_accuracy;
-    double pred;
-    int index_pred;
 
     // Train DNN
-    int NUMBER_OF_EPOCHS = 1000;
-
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         if (rank != 0) {
             ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
