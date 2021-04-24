@@ -35,7 +35,7 @@ int main() {
     int NUM_CLASSES = 3;
     double start_learning_rate = 1.0;
 
-    std:: cout << "I'm here and I'm rank: " << rank << std::endl;
+    //std:: cout << "I'm here and I'm rank: " << rank << std::endl;
     
     // all
     // Load initial weights from csv file
@@ -76,38 +76,48 @@ int main() {
         int data_total_size = X_train.rows(); // total number of train data points
         std::cout << "data total rows " << data_total_size << std::endl;
         int number_of_workers = comm_sz - 1;
+        std::cout << "number of workers " << number_of_workers << std::endl;
+        std::cout << "comm_sz " << comm_sz << std::endl;
         int data_subset_size = data_total_size/number_of_workers;
         int message_size_X = data_subset_size*X_train.cols();
         int message_size_y = data_subset_size;
 
-
-        std::cout << "data total rows " << data_total_size << std::endl;
-
+        std::cout << "data subset size " << data_subset_size << std::endl;
 
         // send a subset of data to each worker
         for (int dest=1; dest<=number_of_workers; dest++) {
-            Eigen::MatrixXd X_train_subset = X_train.block((dest-1)*data_subset_size, 0, dest*data_subset_size, X_train.cols());
-            Eigen::VectorXi y_train_subset = y_train.segment((dest-1)*data_subset_size, dest*data_subset_size);
-
+            Eigen::MatrixXd X_train_subset = X_train.block((dest-1)*data_subset_size, 0, data_subset_size, X_train.cols());
+            Eigen::VectorXi y_train_subset = y_train.segment((dest-1)*data_subset_size, data_subset_size);
+            std::cout << "The matrix X_train_subset is of size " << X_train_subset.rows() << "x" << X_train_subset.cols() << std::endl;
+            std::cout << "The vector y_train_subset is of size " << y_train_subset.rows() << "x" << y_train_subset.cols() << std::endl;
+            
             MPI_Send(&message_size_X, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            std::cout << "Sent X" << std::endl;
             MPI_Send(&X_train_subset, message_size_X, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-
+            std::cout <<"X train Sent" << std::endl;
             MPI_Send(&message_size_y, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            std::cout << "Sent y" << std::endl;
             MPI_Send(&y_train_subset, message_size_y, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            std::cout <<"y train Sent" << std::endl;
         }
     }
 
     // workers receive data from master
-    if (rank != 0) {
+    else {
         int source = 0;
         MPI_Recv(&message_size_X, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        std::cout << "Received X" << std::endl;
         MPI_Recv(&X_train_subset, message_size_X, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
+        std::cout <<"X train Received" << std::endl;
         MPI_Recv(&message_size_y, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        std::cout << "Received y" << std::endl;
         MPI_Recv(&y_train_subset, message_size_y, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        std::cout <<"y train Received" << std::endl;
     }
 
-
+    MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to receive their subset of data
+    std::cout <<"Ready to train" << std::endl;
+    
     // Train DNN
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         if (rank != 0) {

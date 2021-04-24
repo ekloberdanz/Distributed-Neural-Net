@@ -142,7 +142,6 @@ Eigen::MatrixXd load_matrix_data(std::string fileToOpen) {
         }
         matrixRowNumber++;
     }
-    std::cout << "\nmatrix row number: " << matrixRowNumber << "\n";
     return Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(matrixEntries.data(), matrixRowNumber, matrixEntries.size() / matrixRowNumber);
  
 }
