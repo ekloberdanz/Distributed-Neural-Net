@@ -18,18 +18,22 @@ int main() {
     std::string TMPDIR(tmp);
     
     //std::cout << "path " << get_current_dir_name() << std::endl;
-    std::cout << "envir " << TMPDIR << std::endl;
+    //std::cout << "envir " << TMPDIR << std::endl;
     //std::cout << "number of processes: " << comm_sz << std::endl;
      
 
     // all
     // Dataset
-    Eigen::MatrixXd X_train, X_train_subset;
-    Eigen::VectorXi y_train, y_train_subset;
+    Eigen::MatrixXd X_train;
+    Eigen::MatrixXd X_train_subset;
+    Eigen::VectorXi y_train;
+    Eigen::VectorXi y_train_subset;
     Eigen::MatrixXd X_test;
     Eigen::VectorXi y_test;
-    int message_size_X, message_size_y;
-    
+    int message_size_X;
+    int message_size_y;
+    int data_subset_size;
+
     // all
     // Parameters
     int NUM_CLASSES = 3;
@@ -64,69 +68,84 @@ int main() {
 
     int NUMBER_OF_EPOCHS = 1000;
     
-    // master holds all data
-    if (rank == 0) {
-        std:: cout << "I'm here " << rank << std::endl;
-        // Load and randomly shuffle the training and testing data from the file
-        X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
-        y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
-        X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
-        y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
+    // workers receive data subsets from master
+    //if (rank != 0) {
+    //    int source = 0;
+    //    MPI_Recv(&message_size_X, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //    std::cout << "Received X, " << message_size_X << std::endl;
+    //    MPI_Recv(&X_train_subset, message_size_X, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //    std::cout <<"X train Received" << std::endl;
+    //    MPI_Recv(&message_size_y, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //    std::cout << "Received y" << message_size_y << std::endl;
+    //    MPI_Recv(&y_train_subset, message_size_y, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //    std::cout <<"y train Received" << std::endl;
+    //    std::cout << "The received matrix X_train_subset is of size " << X_train_subset.rows() << "x" << X_train_subset.cols() << std::endl;
+    //    std::cout << "The received vector y_train_subset is of size " << y_train_subset.rows() << "x" << y_train_subset.cols() << std::endl;
+    //}
+
+    // Load and randomly shuffle the training and testing data from the file
+    X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
+    y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
+    X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
+    y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
         
-        int data_total_size = X_train.rows(); // total number of train data points
-        std::cout << "data total rows " << data_total_size << std::endl;
-        int number_of_workers = comm_sz - 1;
-        std::cout << "number of workers " << number_of_workers << std::endl;
-        std::cout << "comm_sz " << comm_sz << std::endl;
-        int data_subset_size = data_total_size/number_of_workers;
-        int message_size_X = data_subset_size*X_train.cols();
-        int message_size_y = data_subset_size;
+    int data_total_size = X_train.rows(); // total number of train data points
+    std::cout << "data total rows " << data_total_size << std::endl;
+    int number_of_workers = comm_sz - 1;
+    std::cout << "number of workers " << number_of_workers << std::endl;
+    std::cout << "comm_sz " << comm_sz << std::endl;
 
-        std::cout << "data subset size " << data_subset_size << std::endl;
+    data_subset_size = data_total_size/(comm_sz-1);
+    message_size_X = data_subset_size*X_train.cols();
+    message_size_y = data_subset_size;
+    std::cout << "message size X " << message_size_X << std::endl;
+    std::cout << "message size y " << message_size_y << std::endl;
+    std::cout << "data subset size " << data_subset_size << std::endl;
+        
+    MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to initialize neural net
 
-        // send a subset of data to each worker
-        for (int dest=1; dest<=number_of_workers; dest++) {
-            Eigen::MatrixXd X_train_subset = X_train.block((dest-1)*data_subset_size, 0, data_subset_size, X_train.cols());
-            Eigen::VectorXi y_train_subset = y_train.segment((dest-1)*data_subset_size, data_subset_size);
-            std::cout << "The matrix X_train_subset is of size " << X_train_subset.rows() << "x" << X_train_subset.cols() << std::endl;
-            std::cout << "The vector y_train_subset is of size " << y_train_subset.rows() << "x" << y_train_subset.cols() << std::endl;
-            
-            MPI_Send(&message_size_X, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            std::cout << "Sent X" << std::endl;
-            MPI_Send(&X_train_subset, message_size_X, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-            std::cout <<"X train Sent" << std::endl;
-            MPI_Send(&message_size_y, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            std::cout << "Sent y" << std::endl;
-            MPI_Send(&y_train_subset, message_size_y, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            std::cout <<"y train Sent" << std::endl;
-        }
-    }
+    // master holds all data
+    //if (rank == 0) {
+    //    std:: cout << "I'm here " << rank << std::endl;
+    //    // send a subset of data to each worker
+    //    for (int dest=1; dest<number_of_workers; dest++) {
 
-    // workers receive data from master
-    else {
-        int source = 0;
-        MPI_Recv(&message_size_X, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout << "Received X" << std::endl;
-        MPI_Recv(&X_train_subset, message_size_X, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout <<"X train Received" << std::endl;
-        MPI_Recv(&message_size_y, 1, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout << "Received y" << std::endl;
-        MPI_Recv(&y_train_subset, message_size_y, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout <<"y train Received" << std::endl;
-    }
+    //        X_train_subset = X_train.block((dest-1)*data_subset_size, 0, data_subset_size, X_train.cols());
+    //        y_train_subset = y_train.segment((dest-1)*data_subset_size, data_subset_size);
+    //        std::cout << "The sent matrix X_train_subset is of size " << X_train_subset.rows() << "x" << X_train_subset.cols() << std::endl;
+    //        std::cout << "The sent vector y_train_subset is of size " << y_train_subset.rows() << "x" << y_train_subset.cols() << std::endl;
+    //         
+    //        std::cout << "Ready to send" << std::endl;
+
+    //        //MPI_Sendrecv_replace(&message_size_X, 1, MPI_INT, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //        //std::cout << "Sent X, rank: " << rank << std::endl;
+    //        MPI_Sendrecv_replace(&X_train_subset, 84, MPI_DOUBLE, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //        std::cout <<"X train Sent, rank: " << rank << std::endl;
+    //       // MPI_Sendrecv_replace(&message_size_y, 1, MPI_INT, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //       // std::cout << "Sent y, rank: " << rank << std::endl;
+    //        MPI_Sendrecv_replace(&y_train_subset, 42, MPI_INT, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //        std::cout <<"y train Sent, rank: " << rank  << std::endl;
+    //    }
+    //}
 
     MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to receive their subset of data
     std::cout <<"Ready to train" << std::endl;
     
     // Train DNN
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
+    std::cout <<"epoch " << epoch << std::endl;
         if (rank != 0) {
+            X_train_subset = X_train.block((rank-1)*data_subset_size, 0, data_subset_size, X_train.cols());
+            y_train_subset = y_train.segment((rank-1)*data_subset_size, data_subset_size);
+            std::cout << "The sent matrix X_train_subset is of size " << X_train_subset.rows() << "x" << X_train_subset.cols() << std::endl;
+            std::cout << "The sent vector y_train_subset is of size " << y_train_subset.rows() << "x" << y_train_subset.cols() << std::endl;
             ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
             dense_layer_1.forward(X_train_subset);
             activation_relu.forward(dense_layer_1.output);
             dense_layer_2.forward(activation_relu.output);
             activation_softmax.forward(dense_layer_2.output);
 
+            std::cout <<"Finished forward" << std::endl;
             ////////////////////////////////////////////////////////////backward pass/////////////////////////////////////////////////////////////////////////
             loss_categorical_crossentropy.backward(activation_softmax.output, y_train_subset);
             activation_softmax.backward(loss_categorical_crossentropy.dinputs);
@@ -134,33 +153,41 @@ int main() {
             activation_relu.backward(dense_layer_2.dinputs);
             dense_layer_1.backward(activation_relu.dinputs);
 
+            std::cout <<"Finished backward" << std::endl;
             ////////////////////////////////////////////////////////////optimizer - update weights and biases/////////////////////////////////////////////////////////////////////////
             optimizer_SGD.pre_update_params(start_learning_rate);
             optimizer_SGD.update_params(dense_layer_1);
             optimizer_SGD.update_params(dense_layer_2);
             optimizer_SGD.post_update_params();
 
-            MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
-
-            // workers send weights and biases to master, who uses them to compute a sum to compute average
-            MPI_Reduce(&dense_layer_1.weights, &dense_layer_1.weights, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(&dense_layer_2.weights, &dense_layer_2.weights, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(&dense_layer_1.biases, &dense_layer_1.biases, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(&dense_layer_2.biases, &dense_layer_2.biases, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+            std::cout <<"Updated params" << std::endl;
         }
-
-        if (rank ==0) {
+        MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
+        std::cout <<"Everyone computed weights and biases" << std::endl;
+        
+        // workers send weights and biases to master, who uses them to compute a sum to compute average
+        MPI_Reduce(&dense_layer_1.weights, &dense_layer_1.weights, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&dense_layer_2.weights, &dense_layer_2.weights, dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&dense_layer_1.biases, &dense_layer_1.biases, dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&dense_layer_2.biases, &dense_layer_2.biases, dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        
+        std::cout <<"Everyone sent their weights and biases and root collected" << std::endl;
+        
+        if (rank == 0) {
             // compute average
+            std::cout << "Weights" << dense_layer_1.weights << std::endl;
             dense_layer_1.weights = dense_layer_1.weights/(comm_sz-1);
             dense_layer_2.weights = dense_layer_2.weights/(comm_sz-1);
             dense_layer_1.biases = dense_layer_1.biases/(comm_sz-1);
             dense_layer_2.weights = dense_layer_2.weights/(comm_sz-1);
 
             // broadcast new weights and biases to workers
-            MPI_Bcast(&dense_layer_1.weights, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&dense_layer_2.weights, dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&dense_layer_1.biases, dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&dense_layer_2.biases, dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            for (int dest=1; dest<comm_sz-1; dest++) {
+                MPI_Sendrecv_replace(&dense_layer_1.weights, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Sendrecv_replace(&dense_layer_2.weights, dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Sendrecv_replace(&dense_layer_1.biases, dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Sendrecv_replace(&dense_layer_2.biases, dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, dest, 0, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
 
             // periodically calculate train accuracy and loss
             dense_layer_1.forward(X_train);
