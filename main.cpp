@@ -14,10 +14,10 @@ int main() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
+    // temporary directory on cluster, where train data stored
     char const* tmp = getenv("TMPDIR");
     std::string TMPDIR(tmp);
     
-
     // all
     // Dataset
     Eigen::MatrixXd X_train;
@@ -78,33 +78,22 @@ int main() {
     y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
         
     data_total_size = X_train.rows(); // total number of train data points
-    //std::cout << "data total rows " << data_total_size << std::endl;
-
     data_subset_size = data_total_size/(comm_sz-1);
-    //std::cout << "data subset size " << data_subset_size << std::endl;
         
     MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to initialize neural net objects
 
-    //std::cout <<"Ready to train" << std::endl;
-    
     // Train DNN
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
-    //std::cout <<"epoch " << epoch << std::endl;
         if (rank != 0) {
-
-            //std::cout <<"checking dense layer weights 1 new " << dense_layer_1.weights << std::endl;
-            
             X_train_subset = X_train.block((rank-1)*data_subset_size, 0, data_subset_size, X_train.cols());
             y_train_subset = y_train.segment((rank-1)*data_subset_size, data_subset_size);
-            //std::cout << "The sent matrix X_train_subset is of size " << X_train_subset.rows() << "x" << X_train_subset.cols() << std::endl;
-            //std::cout << "The sent vector y_train_subset is of size " << y_train_subset.rows() << "x" << y_train_subset.cols() << std::endl;
+           
             ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
             dense_layer_1.forward(X_train_subset);
             activation_relu.forward(dense_layer_1.output);
             dense_layer_2.forward(activation_relu.output);
             activation_softmax.forward(dense_layer_2.output);
 
-            //std::cout <<"Finished forward" << std::endl;
             ////////////////////////////////////////////////////////////backward pass/////////////////////////////////////////////////////////////////////////
             loss_categorical_crossentropy.backward(activation_softmax.output, y_train_subset);
             activation_softmax.backward(loss_categorical_crossentropy.dinputs);
@@ -112,7 +101,6 @@ int main() {
             activation_relu.backward(dense_layer_2.dinputs);
             dense_layer_1.backward(activation_relu.dinputs);
 
-            //std::cout <<"Finished backward" << std::endl;
             ////////////////////////////////////////////////////////////optimizer - update weights and biases/////////////////////////////////////////////////////////////////////////
             optimizer_SGD.pre_update_params(start_learning_rate);
             optimizer_SGD.update_params(dense_layer_1);
@@ -124,14 +112,9 @@ int main() {
             MPI_Send(dense_layer_2.weights.data(), dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
             MPI_Send(dense_layer_1.biases.data(), dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
             MPI_Send(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-            //std::cout <<"sent, rank: " << rank << std::endl;
         }
+        
         MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
-        //if (rank == 0) {
-        //    std::cout <<"Everyone computed weights and biases" << std::endl;
-        //}
-        //
-        //std::cout <<" Finished sending and receving " << std::endl;
         
         if (rank == 0) {
             weights_1_sum = Eigen::MatrixXd::Zero(dense_layer_1.weights.rows(), dense_layer_1.weights.cols());
@@ -139,24 +122,17 @@ int main() {
             biases_1_sum = Eigen::VectorXd::Zero(dense_layer_1.biases.rows(), dense_layer_1.biases.cols());
             biases_2_sum = Eigen::VectorXd::Zero(dense_layer_2.biases.rows(), dense_layer_2.biases.cols());
             
-            //std::cout << "before weights_1_sum size " << weights_1_sum.rows() << "x" << weights_1_sum.cols() << "rank: " << rank  << std::endl;
-            //std::cout << "before weights_1_sum " << weights_1_sum << std::endl;
-            
             for (int p=1; p <= comm_sz-1; p++) {
                 MPI_Recv(dense_layer_1.weights.data(), dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(dense_layer_2.weights.data(), dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(dense_layer_1.biases.data(), dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                //std::cout << "received, rank: " << rank << std::endl;
+                
                 weights_1_sum = weights_1_sum + dense_layer_1.weights;    
                 weights_2_sum = weights_2_sum + dense_layer_2.weights;    
                 biases_1_sum = biases_1_sum + dense_layer_1.biases;    
                 biases_2_sum = biases_2_sum + dense_layer_2.biases;    
             }
-            //std::cout <<"Everyone sent their weights and biases and root collected" << std::endl;
-            //std::cout <<"weights_1_sum " << weights_1_sum << std::endl;
-
-            //MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to send updates
         
             // compute average
             dense_layer_1.weights = weights_1_sum/(comm_sz-1);
@@ -164,8 +140,6 @@ int main() {
             dense_layer_1.biases = biases_1_sum/(comm_sz-1);
             dense_layer_2.biases = biases_2_sum/(comm_sz-1);
 
-            //std::cout <<"dense layer weights 1 new " << dense_layer_1.weights << std::endl;
-            
             // periodically calculate train accuracy and loss
             dense_layer_1.forward(X_train);
             activation_relu.forward(dense_layer_1.output);
@@ -189,15 +163,12 @@ int main() {
                 std::cout << "learning_rate: " << optimizer_SGD.learning_rate << std::endl;
                 std::cout << "loss: " << loss << std::endl;
             }
-            //std::cout <<"Finished epoch: " << epoch << std::endl;
         }
         // broadcast new weights and biases to workers
         MPI_Bcast(dense_layer_1.weights.data(), dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(dense_layer_2.weights.data(), dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(dense_layer_1.biases.data(), dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-        //std::cout <<"Everyone got updated weights and biases" << std::endl;
     }
 
 
