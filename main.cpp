@@ -127,10 +127,10 @@ int main() {
             //std::cout <<"sent, rank: " << rank << std::endl;
         }
         MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
-        if (rank == 0) {
-            std::cout <<"Everyone computed weights and biases" << std::endl;
-        }
-        
+        //if (rank == 0) {
+        //    std::cout <<"Everyone computed weights and biases" << std::endl;
+        //}
+        //
         //std::cout <<" Finished sending and receving " << std::endl;
         
         if (rank == 0) {
@@ -142,7 +142,7 @@ int main() {
             //std::cout << "before weights_1_sum size " << weights_1_sum.rows() << "x" << weights_1_sum.cols() << "rank: " << rank  << std::endl;
             //std::cout << "before weights_1_sum " << weights_1_sum << std::endl;
             
-            for (int p=1; p <= comm_sz-1; p++){
+            for (int p=1; p <= comm_sz-1; p++) {
                 MPI_Recv(dense_layer_1.weights.data(), dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(dense_layer_2.weights.data(), dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 MPI_Recv(dense_layer_1.biases.data(), dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -153,25 +153,11 @@ int main() {
                 biases_1_sum = biases_1_sum + dense_layer_1.biases;    
                 biases_2_sum = biases_2_sum + dense_layer_2.biases;    
             }
-            std::cout <<"Everyone sent their weights and biases and root collected" << std::endl;
+            //std::cout <<"Everyone sent their weights and biases and root collected" << std::endl;
             //std::cout <<"weights_1_sum " << weights_1_sum << std::endl;
-        }
 
-        //MPI_Reduce(&dense_layer_1.weights, &weights_1_sum, dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-        //MPI_Reduce(&dense_layer_2.weights, &weights_2_sum, dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-        //std::cout <<"We're good! " << std::endl;
-        //MPI_Reduce(&dense_layer_1.biases, &biases_1_sum, dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-        //std::cout <<"We're good! " << std::endl;
-        //MPI_Reduce(&dense_layer_2.biases, &biases_2_sum, dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-        //std::cout <<"We're good! " << std::endl;
+            //MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to send updates
         
-        
-        MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to send updates
-        if (rank == 0) {
-            std::cout <<"Barrier" << std::endl;
-        }
-        
-        if (rank == 0) {
             // compute average
             dense_layer_1.weights = weights_1_sum/(comm_sz-1);
             dense_layer_2.weights = weights_2_sum/(comm_sz-1);
@@ -203,7 +189,7 @@ int main() {
                 std::cout << "learning_rate: " << optimizer_SGD.learning_rate << std::endl;
                 std::cout << "loss: " << loss << std::endl;
             }
-            std::cout <<"Finished epoch: " << epoch << std::endl;
+            //std::cout <<"Finished epoch: " << epoch << std::endl;
         }
         // broadcast new weights and biases to workers
         MPI_Bcast(dense_layer_1.weights.data(), dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -211,7 +197,7 @@ int main() {
         MPI_Bcast(dense_layer_1.biases.data(), dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        std::cout <<"Everyone got updated weights and biases" << std::endl;
+        //std::cout <<"Everyone got updated weights and biases" << std::endl;
     }
 
 
