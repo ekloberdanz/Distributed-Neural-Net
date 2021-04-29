@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <mpi.h>
 #include <stdio.h>
+#include <chrono>
 
 int main() {
     // MPI initialization
