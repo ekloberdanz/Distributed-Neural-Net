@@ -82,7 +82,7 @@ int main() {
 
     // Train DNN
     double time_start = MPI_Wtime();
-    int NUMBER_OF_EPOCHS = 100000;
+    int NUMBER_OF_EPOCHS = 10000;
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         if (rank != 0) {
             X_train_subset = X_train.block((rank-1)*data_subset_size, 0, data_subset_size, X_train.cols());
@@ -114,7 +114,7 @@ int main() {
             MPI_Send(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
         
-        MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
+        //MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
         
         if (rank == 0) {
             weights_1_sum = Eigen::MatrixXd::Zero(dense_layer_1.weights.rows(), dense_layer_1.weights.cols());
@@ -160,10 +160,12 @@ int main() {
                 train_accuracy = pred_truth_comparison.mean();
                 std::cout << "epoch: " << epoch << std::endl;
                 std::cout << "train_accuracy: " << train_accuracy << std::endl;
-                std::cout << "learning_rate: " << optimizer_SGD.learning_rate << std::endl;
                 std::cout << "loss: " << loss << std::endl;
             }
         }
+
+        //MPI_Barrier(MPI_COMM_WORLD); // wait for computing global params
+
         // broadcast new weights and biases to workers
         MPI_Bcast(dense_layer_1.weights.data(), dense_layer_1.weights.rows() * dense_layer_1.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(dense_layer_2.weights.data(), dense_layer_2.weights.rows() * dense_layer_2.weights.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -177,7 +179,7 @@ int main() {
     double time_execution;
     MPI_Reduce(&time_delta, &time_execution, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (rank == 0) {
-        std::cout << "Training time: " << time_execution << "seconds" << std::endl;
+        std::cout << "\nTraining time in seconds: " << time_execution << std::endl;
     }
 
      // Test DNN
@@ -200,7 +202,7 @@ int main() {
                 pred_truth_comparison(i) = predictions(i) == y_test(i);
         }
         test_accuracy = pred_truth_comparison.mean();
-        std::cout << "test_accuracy: " << test_accuracy << std::endl;
+        std::cout << "\ntest_accuracy: " << test_accuracy << std::endl;
     }
 
     MPI_Finalize();
