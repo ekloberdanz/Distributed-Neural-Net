@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/range/irange.hpp>
 #include <typeinfo>
+#include <mpi.h> // for timing to allow comparison with parallel version
 
 int main() {
     // Dataset
@@ -23,15 +24,15 @@ int main() {
     double start_learning_rate = 1.0;
 
     // Load initial weights from csv file
-    Eigen::MatrixXd w_1;
-    Eigen::MatrixXd w_2;
-    w_1 = load_matrix_data("./data/weights_1.csv");
-    w_2 = load_matrix_data("./data/weights_2.csv");
+    //Eigen::MatrixXd w_1;
+    //Eigen::MatrixXd w_2;
+    //w_1 = load_matrix_data("./data/weights_1.csv");
+    //w_2 = load_matrix_data("./data/weights_2.csv");
 
     // Create for neural network objects
-    LayerDense dense_layer_1(2, 64, w_1);
+    LayerDense dense_layer_1(2, 64);
     ActivationRelu activation_relu;
-    LayerDense dense_layer_2(64, NUM_CLASSES, w_2);
+    LayerDense dense_layer_2(64, NUM_CLASSES);
     ActivationSoftmax activation_softmax;
     CrossEntropyLoss loss_categorical_crossentropy;
     StochasticGradientDescent optimizer_SGD(1.0, 1e-3, 0.9);
@@ -44,6 +45,7 @@ int main() {
     int index_pred;
 
     // Train DNN
+    double time_start = MPI_Wtime();
     int NUMBER_OF_EPOCHS = 1000;
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +126,13 @@ int main() {
         // std::cout << "dense_layer_2.dinputs: " << dense_layer_2.dinputs << std::endl;
         // std::cout << "activation_relu.dinputs: " << activation_relu.dinputs << std::endl;
     }
-
+    // Time training time
+    double time_end = MPI_Wtime();
+    double time_delta = time_end - time_start;
+    /*compute max, min, and average timing statistics*/
+    if (rank == 0) {
+        std::cout << "\nTraining time in seconds: " << time_delta << std::endl;
+    }
     // // Test DNN
     dense_layer_1.forward(X_test);
     activation_relu.forward(dense_layer_1.output);
