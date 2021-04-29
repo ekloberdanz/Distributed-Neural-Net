@@ -32,7 +32,7 @@ int main() {
 
     // all
     // Parameters
-    int NUM_CLASSES = 3;
+    int NUM_CLASSES = 10;
     double start_learning_rate = 1.0;
 
     
@@ -71,11 +71,17 @@ int main() {
     Eigen::VectorXd biases_2_new(dense_layer_2.biases.rows(), dense_layer_2.biases.cols());
     
     // Load training and testing data from the file, train data is pre-shuffled
-    X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
-    y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
-    X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
-    y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
-        
+    //X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
+    //y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
+    //X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
+    //y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
+    ////
+    // Larger dataset with 10 classes
+    X_train = load_matrix_data(TMPDIR+"/data/X_train_large.csv");
+    y_train = load_vector_data(TMPDIR+"/data/y_train_large.csv");
+    X_test = load_matrix_data(TMPDIR+"/data/X_test_large.csv");
+    y_test = load_vector_data(TMPDIR+"/data/y_test_large.csv");
+    
     data_total_size = X_train.rows(); // total number of train data points
     data_subset_size = data_total_size/(comm_sz-1);
         
