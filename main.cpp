@@ -69,7 +69,7 @@ int main() {
             pred_truth_comparison(i) = predictions(i) == y_train(i);
         }
         train_accuracy = pred_truth_comparison.mean();
-        if (epoch % 100 == 0) {
+        if (epoch % 1000 == 0) {
             std::cout << "epoch: " << epoch << std::endl;
             std::cout << "train_accuracy: " << train_accuracy << std::endl;
             std::cout << "learning_rate: " << optimizer_SGD.learning_rate << std::endl;
@@ -131,7 +131,7 @@ int main() {
     
     // Time training time
     auto t_end = std::chrono::high_resolution_clock::now();
-    std::cout << "training took " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end-t_start).count()<< " milliseconds\n";
+    std::cout << "\ntraining took " << std::chrono::duration_cast<std::chrono::seconds>(t_end-t_start).count()<< " seconds\n";
 
     // Test DNN
     dense_layer_1.forward(X_test);
@@ -152,5 +152,5 @@ int main() {
             pred_truth_comparison(i) = predictions(i) == y_test(i);
     }
     test_accuracy = pred_truth_comparison.mean();
-    std::cout << "test_accuracy: " << test_accuracy << std::endl;
+    std::cout << "\ntest_accuracy: " << test_accuracy << std::endl;
 }
