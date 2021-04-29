@@ -4,7 +4,8 @@
 #include <iostream>
 #include <boost/range/irange.hpp>
 #include <typeinfo>
-#include <mpi.h> // for timing to allow comparison with parallel version
+#include <chrono>
+#include <ctime>
 
 int main() {
     // Dataset
@@ -45,8 +46,9 @@ int main() {
     int index_pred;
 
     // Train DNN
-    double time_start = MPI_Wtime();
-    int NUMBER_OF_EPOCHS = 1000;
+    auto t_start = std::chrono::high_resolution_clock::now();
+    
+    int NUMBER_OF_EPOCHS = 10000;
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         ////////////////////////////////////////////////////////forward pass//////////////////////////////////////////////////////////////////////////////////
         dense_layer_1.forward(X_train);
@@ -126,14 +128,12 @@ int main() {
         // std::cout << "dense_layer_2.dinputs: " << dense_layer_2.dinputs << std::endl;
         // std::cout << "activation_relu.dinputs: " << activation_relu.dinputs << std::endl;
     }
+    
     // Time training time
-    double time_end = MPI_Wtime();
-    double time_delta = time_end - time_start;
-    /*compute max, min, and average timing statistics*/
-    if (rank == 0) {
-        std::cout << "\nTraining time in seconds: " << time_delta << std::endl;
-    }
-    // // Test DNN
+    auto t_end = std::chrono::high_resolution_clock::now();
+    std::cout << "training took " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end-t_start).count()<< " milliseconds\n";
+
+    // Test DNN
     dense_layer_1.forward(X_test);
     activation_relu.forward(dense_layer_1.output);
     dense_layer_2.forward(activation_relu.output);
