@@ -142,6 +142,7 @@ Eigen::MatrixXd load_matrix_data(std::string fileToOpen) {
         }
         matrixRowNumber++;
     }
+    //std::shuffle(std::begin(matrixEntries), std::end(matrixEntries), std::default_random_engine());
     return Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(matrixEntries.data(), matrixRowNumber, matrixEntries.size() / matrixRowNumber);
  
 }
@@ -178,6 +179,7 @@ Eigen::VectorXi load_vector_data(std::string fileToOpen) {
         }
         matrixRowNumber++; //update the column numbers
     }
+    //std::shuffle(std::begin(matrixEntries), std::end(matrixEntries), std::default_random_engine());
     // here we convet the vector variable into the matrix and return the resulting object, 
     // note that matrixEntries.data() is the pointer to the first memory location at which the entries of the vector matrixEntries are stored;
     return Eigen::Map<Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(matrixEntries.data(), matrixRowNumber, matrixEntries.size() / matrixRowNumber);

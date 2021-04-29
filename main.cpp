@@ -69,9 +69,7 @@ int main() {
     Eigen::VectorXd biases_1_new(dense_layer_1.biases.rows(), dense_layer_1.biases.cols());
     Eigen::VectorXd biases_2_new(dense_layer_2.biases.rows(), dense_layer_2.biases.cols());
     
-    int NUMBER_OF_EPOCHS = 10000;
-    
-    // Load and randomly shuffle the training and testing data from the file
+    // Load training and testing data from the file, train data is pre-shuffled
     X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
     y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
     X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
@@ -83,6 +81,7 @@ int main() {
     MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to initialize neural net objects
 
     // Train DNN
+    int NUMBER_OF_EPOCHS = 10000;
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         if (rank != 0) {
             X_train_subset = X_train.block((rank-1)*data_subset_size, 0, data_subset_size, X_train.cols());
@@ -141,23 +140,23 @@ int main() {
             dense_layer_2.biases = biases_2_sum/(comm_sz-1);
 
             // periodically calculate train accuracy and loss
-            dense_layer_1.forward(X_train);
-            activation_relu.forward(dense_layer_1.output);
-            dense_layer_2.forward(activation_relu.output);
-            activation_softmax.forward(dense_layer_2.output);
-            loss = loss_categorical_crossentropy.calculate(activation_softmax.output, y_train);
-            Eigen::MatrixXd::Index maxRow, maxCol;
-            Eigen::VectorXi predictions(activation_softmax.output.rows());
-            Eigen::VectorXd pred_truth_comparison(activation_softmax.output.rows());
+            if (epoch % 1000 == 0) {
+                dense_layer_1.forward(X_train);
+                activation_relu.forward(dense_layer_1.output);
+                dense_layer_2.forward(activation_relu.output);
+                activation_softmax.forward(dense_layer_2.output);
+                loss = loss_categorical_crossentropy.calculate(activation_softmax.output, y_train);
+                Eigen::MatrixXd::Index maxRow, maxCol;
+                Eigen::VectorXi predictions(activation_softmax.output.rows());
+                Eigen::VectorXd pred_truth_comparison(activation_softmax.output.rows());
 
-            for (int i=0; i < activation_softmax.output.rows(); i++) {
-                pred = activation_softmax.output.row(i).maxCoeff(&maxRow, &maxCol);
-                index_pred = maxCol;
-                predictions(i) = index_pred;
-                pred_truth_comparison(i) = predictions(i) == y_train(i);
-            }
-            train_accuracy = pred_truth_comparison.mean();
-            if (epoch % 100 == 0) {
+                for (int i=0; i < activation_softmax.output.rows(); i++) {
+                    pred = activation_softmax.output.row(i).maxCoeff(&maxRow, &maxCol);
+                    index_pred = maxCol;
+                    predictions(i) = index_pred;
+                    pred_truth_comparison(i) = predictions(i) == y_train(i);
+                }
+                train_accuracy = pred_truth_comparison.mean();
                 std::cout << "epoch: " << epoch << std::endl;
                 std::cout << "train_accuracy: " << train_accuracy << std::endl;
                 std::cout << "learning_rate: " << optimizer_SGD.learning_rate << std::endl;

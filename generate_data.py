@@ -4,18 +4,14 @@ import numpy as np
 
 nnfs.init()
 # Create dataset
-# X, y = spiral_data(samples=1000, classes=3)
+X_train, y_train = spiral_data(samples=10000, classes=3)
+X_test, y_test = spiral_data(samples=1000, classes=3)
 
-# split = int(X.shape[0] * 0.7)
-# split
-# X_train = X[:split]
-# y_train = y[:split]
-# X_test = X[split:]
-# y_test = y[split:]
-
-
-X_train, y_train = spiral_data(samples=100, classes=3)
-X_test, y_test = spiral_data(samples=100, classes=3)
+# Shuffle train dataset
+keys_train = np.array(range(X_train.shape[0]))
+np.random.shuffle(keys_train)
+X_train = X_train[keys_train]
+y_train = y_train[keys_train]
 
 np.savetxt("./data/X_train.csv", X_train, delimiter=",")
 np.savetxt("./data/y_train.csv", y_train, delimiter=",")
