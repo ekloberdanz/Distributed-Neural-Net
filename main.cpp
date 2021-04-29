@@ -81,7 +81,8 @@ int main() {
     MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to initialize neural net objects
 
     // Train DNN
-    int NUMBER_OF_EPOCHS = 10000;
+    double time_start = MPI_Wtime();
+    int NUMBER_OF_EPOCHS = 100000;
     for (int epoch : boost::irange(0,NUMBER_OF_EPOCHS)) {
         if (rank != 0) {
             X_train_subset = X_train.block((rank-1)*data_subset_size, 0, data_subset_size, X_train.cols());
@@ -169,7 +170,15 @@ int main() {
         MPI_Bcast(dense_layer_1.biases.data(), dense_layer_1.biases.rows() * dense_layer_1.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
-
+    // Time training time
+    double time_end = MPI_Wtime();
+    double time_delta = time_end - time_start;
+    /*compute max, min, and average timing statistics*/
+    double time_execution;
+    MPI_Reduce(&time_delta, &time_execution, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    if (rank == 0) {
+        std::cout << "Training time: " << time_execution << "seconds" << std::endl;
+    }
 
      // Test DNN
     if (rank == 0) {
