@@ -15,13 +15,21 @@ int main() {
     Eigen::VectorXi y_test;
  
     // Load the training and testing data from the file
-    X_train = load_matrix_data("./data/X_train.csv");
-    y_train = load_vector_data("./data/y_train.csv");
-    X_test = load_matrix_data("./data/X_test.csv");
-    y_test = load_vector_data("./data/y_test.csv");
+    //X_train = load_matrix_data("./data/X_train.csv");
+    //y_train = load_vector_data("./data/y_train.csv");
+    //X_test = load_matrix_data("./data/X_test.csv");
+    //y_test = load_vector_data("./data/y_test.csv");
 
+    X_train = load_matrix_data("./data/X_train_large.csv");
+    y_train = load_vector_data("./data/y_train_large.csv");
+    X_test = load_matrix_data("./data/X_test_large.csv");
+    y_test = load_vector_data("./data/y_test_large.csv");
+    
+    std::cout << "The matrix X_train is of size " << X_train.rows() << "x" << X_train.cols() << std::endl;
+    std::cout << "The vector y_train is of size " << y_train.rows() << "x" << y_train.cols() << std::endl;
+    
     // Parameters
-    int NUM_CLASSES = 3;
+    int NUM_CLASSES = 10;
     double start_learning_rate = 1.0;
 
     // Load initial weights from csv file
