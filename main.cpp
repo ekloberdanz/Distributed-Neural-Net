@@ -32,7 +32,7 @@ int main() {
 
     // all
     // Parameters
-    int NUM_CLASSES = 10;
+    int NUM_CLASSES = 5;
     double start_learning_rate = 1.0;
 
     
@@ -76,11 +76,13 @@ int main() {
     //X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
     //y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
     ////
-    // Larger dataset with 10 classes
+    // Larger dataset with 5 classes
     X_train = load_matrix_data(TMPDIR+"/data/X_train_large.csv");
     y_train = load_vector_data(TMPDIR+"/data/y_train_large.csv");
     X_test = load_matrix_data(TMPDIR+"/data/X_test_large.csv");
     y_test = load_vector_data(TMPDIR+"/data/y_test_large.csv");
+    
+    std::cout << "X_train shape : " << X_train.rows() << "x" << X_train.cols() << std::endl;
     
     data_total_size = X_train.rows(); // total number of train data points
     data_subset_size = data_total_size/(comm_sz-1);
