@@ -29,7 +29,7 @@ int main() {
     std::cout << "The vector y_train is of size " << y_train.rows() << "x" << y_train.cols() << std::endl;
     
     // Parameters
-    int NUM_CLASSES = 10;
+    int NUM_CLASSES = 4;
     double start_learning_rate = 1.0;
 
     // Load initial weights from csv file
