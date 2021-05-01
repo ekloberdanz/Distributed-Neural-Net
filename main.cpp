@@ -15,11 +15,6 @@ int main() {
     Eigen::VectorXi y_test;
  
     // Load the training and testing data from the file
-    //X_train = load_matrix_data("./data/X_train.csv");
-    //y_train = load_vector_data("./data/y_train.csv");
-    //X_test = load_matrix_data("./data/X_test.csv");
-    //y_test = load_vector_data("./data/y_test.csv");
-
     X_train = load_matrix_data("./data/X_train_large.csv");
     y_train = load_vector_data("./data/y_train_large.csv");
     X_test = load_matrix_data("./data/X_test_large.csv");
@@ -31,12 +26,6 @@ int main() {
     // Parameters
     int NUM_CLASSES = 4;
     double start_learning_rate = 1.0;
-
-    // Load initial weights from csv file
-    //Eigen::MatrixXd w_1;
-    //Eigen::MatrixXd w_2;
-    //w_1 = load_matrix_data("./data/weights_1.csv");
-    //w_2 = load_matrix_data("./data/weights_2.csv");
 
     // Create for neural network objects
     LayerDense dense_layer_1(2, 64);
