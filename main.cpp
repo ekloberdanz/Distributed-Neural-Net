@@ -15,9 +15,9 @@ int main() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
-    // temporary directory on cluster, where train data stored
-    char const* tmp = getenv("TMPDIR");
-    std::string TMPDIR(tmp);
+    // temporary directory on cluster
+    //char const* tmp = getenv("TMPDIR");
+    //std::string TMPDIR(tmp);
     
     // all
     // Dataset
@@ -36,14 +36,7 @@ int main() {
     double start_learning_rate = 1.0;
 
     
-    // all
-    // Load initial weights from csv file
-    //Eigen::MatrixXd w_1;
-    //Eigen::MatrixXd w_2;
-    //w_1 = load_matrix_data("./data/weights_1.csv");
-    //w_2 = load_matrix_data("./data/weights_2.csv");
-
-    //std::cout << "w1 : " << w_1.rows() << std::endl;
+    std::cout << "number of processes : " << comm_sz << std::endl;
     
     // all
     // Create for neural network objects
@@ -71,17 +64,18 @@ int main() {
     Eigen::VectorXd biases_2_new(dense_layer_2.biases.rows(), dense_layer_2.biases.cols());
     
     // Load training and testing data from the file, train data is pre-shuffled
-    //X_train = load_matrix_data(TMPDIR+"/data/X_train.csv");
-    //y_train = load_vector_data(TMPDIR+"/data/y_train.csv");
-    //X_test = load_matrix_data(TMPDIR+"/data/X_test.csv");
-    //y_test = load_vector_data(TMPDIR+"/data/y_test.csv");
-    ////
-    // Larger dataset with 5 classes
-    X_train = load_matrix_data(TMPDIR+"/data/X_train_large.csv");
-    y_train = load_vector_data(TMPDIR+"/data/y_train_large.csv");
-    X_test = load_matrix_data(TMPDIR+"/data/X_test_large.csv");
-    y_test = load_vector_data(TMPDIR+"/data/y_test_large.csv");
-    
+    X_train = load_matrix_data("/home/eklober/X_train_large.csv");
+    y_train = load_vector_data("/home/eklober/y_train_large.csv");
+    X_test = load_matrix_data("/home/eklober/X_test_large.csv");
+    y_test = load_vector_data("/home/eklober/y_test_large.csv");
+    std::cout << "X_train shape : " << X_train.rows() << "x" << X_train.cols() << std::endl;
+    //MPI_Barrier(MPI_COMM_WORLD); 
+    // broadcast data to workers
+    //MPI_Bcast(X_train.data(), X_train.rows() * X_train.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(y_train.data(), y_train.rows() * y_train.cols(), MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(X_test.data(), X_test.rows() * X_test.cols(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(y_test.data(), y_test.rows() * y_test.cols(), MPI_INT, 0, MPI_COMM_WORLD);
+
     std::cout << "X_train shape : " << X_train.rows() << "x" << X_train.cols() << std::endl;
     
     data_total_size = X_train.rows(); // total number of train data points
@@ -123,7 +117,7 @@ int main() {
             MPI_Send(dense_layer_2.biases.data(), dense_layer_2.biases.rows() * dense_layer_2.biases.cols(), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
         
-        //MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
+        MPI_Barrier(MPI_COMM_WORLD); // wait for all workers to compute weights and biases
         
         if (rank == 0) {
             weights_1_sum = Eigen::MatrixXd::Zero(dense_layer_1.weights.rows(), dense_layer_1.weights.cols());
