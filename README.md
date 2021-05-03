@@ -27,3 +27,7 @@ for the current training iteration. In this project I implement the synchronous 
 SGD. A serial implementation of the neural network is used as a benchmark to assess the
 speed up from distributed training achieved via data parallelism with MPI and also
 scalability.
+
+![](https://github.com/ekloberdanz/Neural-Net-Implementation/blob/main/figures/table_1.png)
+![](https://github.com/ekloberdanz/Neural-Net-Implementation/blob/main/figures/table_2.png)
+![](https://github.com/ekloberdanz/Neural-Net-Implementation/blob/main/figures/table_3.png)
